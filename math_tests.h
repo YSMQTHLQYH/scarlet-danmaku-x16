@@ -7,6 +7,9 @@ typedef enum {
     MATH_TEST_FOR,
     MATH_TEST_WHILE,
     MATH_TEST_VERA_UNTIL0,
+
+
+    MATH_TEST_COUNT,
 }_eMathTest;
 
 void MathTestsinit();
