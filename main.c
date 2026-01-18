@@ -50,12 +50,14 @@ void main() {
     // setup for timer
     // jsr = Jump to Subroutine
     // This is the memory location of the RDTIM (Read Timer) Kernal Function
-    asm(KERNAL_RDTIM);
+    asm("jsr %w", KERNAL_RDTIM);
     // sta = Store Accumulator
     // This copies the value from the A register to a memory location
     // In this case its the memory location of our "start" variable
     asm("sta %v", last_tick);
 
+
+    //  --- main loop
     while (1) {
         //Update();
 
@@ -87,13 +89,13 @@ void main() {
 
         // Now that we have the start time
         // Get the "next" time and keep looping until it changes
-        asm(KERNAL_RDTIM);
+        asm("jsr %w", KERNAL_RDTIM);
         asm("sta %v", current_tick);
         lag_count = current_tick - last_tick;
         wait_count = 0;
         last_tick += lag_count;
         while (last_tick == current_tick) {
-            asm(KERNAL_RDTIM);
+            asm("jsr %w", KERNAL_RDTIM);
             asm("sta %v", current_tick);
             wait_count += 1;
         }

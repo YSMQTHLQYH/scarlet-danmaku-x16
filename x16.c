@@ -23,14 +23,14 @@ uint8_t load_file(_sFileLoadCtx* ctx) {
     asm("ldx %v", a0);
     asm("ldy %v", a1);
     asm("lda %v", a2);
-    asm(KERNAL_SETNAM);
+    asm("jsr %w", KERNAL_SETNAM);
 
     // file parameters
     a2 = ctx->header_mode;
     asm("lda #$01"); // file number 1
-    asm("ldx #$08"); // devide number 8 (sdcard)
+    asm("ldx #$08"); // device number 8 (sdcard)
     asm("ldy %v", a2);
-    asm(KERNAL_SETLFS);
+    asm("jsr %w", KERNAL_SETLFS);
 
     // load file
     w.u16 = (uint16_t)ctx->dest_addr;
@@ -40,7 +40,7 @@ uint8_t load_file(_sFileLoadCtx* ctx) {
     asm("ldx %v", a0);
     asm("ldy %v", a1);
     asm("lda %v", a2);
-    asm(KERNAL_LOAD);
+    asm("jsr %w", KERNAL_LOAD);
 
     // error handling
     // carry flag set if error

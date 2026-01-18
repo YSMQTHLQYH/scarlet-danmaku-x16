@@ -3,11 +3,14 @@
 
 #include <stdint.h>
 
-#define KERNAL_RDTIM    "jsr $FFDE"
 
-#define KERNAL_SETNAM   "jsr $FFBD"
-#define KERNAL_SETLFS   "jsr $FFBA"
-#define KERNAL_LOAD     "jsr $FFD5"
+//to call:
+//asm("jsr %w", macro);
+#define KERNAL_RDTIM    0xFFDE
+
+#define KERNAL_SETNAM   0xFFBD
+#define KERNAL_SETLFS   0xFFBA
+#define KERNAL_LOAD     0xFFD5
 
 
 typedef enum {
