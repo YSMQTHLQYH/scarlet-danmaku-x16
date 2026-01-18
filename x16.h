@@ -5,19 +5,56 @@
 
 #define KERNAL_RDTIM    "jsr $FFDE"
 
+#define KERNAL_SETNAM   "jsr $FFBD"
+#define KERNAL_SETLFS   "jsr $FFBA"
+#define KERNAL_LOAD     "jsr $FFD5"
+
+
+typedef enum {
+    FILE_LOAD_IGNORE_HEADER = 0,
+    FILE_LOAD_USE_HEADER = 1,
+    FILE_LOAD_HEADERLESS = 2,
+}_eFileLoadHeader;
+typedef enum {
+    FILE_LOAD_RAM = 0,
+    FILE_LOAD_VERIFY = 1,
+    FILE_LOAD_VRAM_P0 = 2,
+    FILE_LOAD_VRAM_P1 = 3,
+}_eFileLoadTarget;
+typedef struct {
+    //args
+    char* filename;
+    uint8_t name_lenght;
+    _eFileLoadHeader header_mode;
+    _eFileLoadTarget target_mode;
+    void* dest_addr;
+    //return
+    union {
+        void* file_end; //final byte loaded + 1
+        uint8_t error_code;
+    };
+}_sFileLoadCtx;
+
+
+// returns 0 if error, 1 if success
+uint8_t load_file(_sFileLoadCtx* ctx);
 
 //  ---- memory
 
 #define RAM_BANK_SIZE   0x2000
-#define ROM_BANK_SIZE   0x4000
-#define HIGH_RAM_8(i)   *(uint8_t*)(0xA000 + i)
-#define HIGH_RAM_16(i)  *(uint16_t*)(0xA000 + i + i)
-//I don't think it's actually called "high rom" but whatever it makes sense
-#define HIGH_ROM_8(i)   *(uint8_t*)(0xC000 + i)
-#define HIGH_ROM_16(i)  *(uint16_t*)(0xC000 + i + i)
-
+#define HIGH_RAM_START  0xA000
+#define HIGH_RAM_8(i)   *(uint8_t*)(HIGH_RAM_START + i)
+#define HIGH_RAM_16(i)  *(uint16_t*)(HIGH_RAM_START + i + i)
 extern volatile uint8_t* const ram_bank;
+#define SET_RAM_BANK(bank)  (*ram_bank) = bank;
+
+//I don't think it's actually called "high rom" but whatever it makes sense
+#define ROM_BANK_SIZE   0x4000
+#define HIGH_ROM_START  0xC000
+#define HIGH_ROM_8(i)   *(uint8_t*)(HIGH_ROM_START + i)
+#define HIGH_ROM_16(i)  *(uint16_t*)(HIGH_ROM_START + i + i)
 extern volatile uint8_t* const rom_bank;
+#define SET_ROM_BANK(bank)  (*rom_bank) = bank;
 
 
 

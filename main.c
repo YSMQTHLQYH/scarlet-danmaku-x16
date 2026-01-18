@@ -15,8 +15,27 @@ void main() {
     uint16_t wait_count = 0, lag_count = 0;
     uint8_t test_counter = 0, test_number = 0;
     uint16_t i = 0;
+    char file_name[] = "test123.bin";
+    _sFileLoadCtx fl = { 0 };
 
     printf("Hello, World!\n");
+
+
+    fl.filename = file_name;
+    fl.name_lenght = 11;
+    fl.header_mode = FILE_LOAD_HEADERLESS;
+    fl.target_mode = FILE_LOAD_RAM;
+    fl.dest_addr = (void*)HIGH_RAM_START;
+    SET_RAM_BANK(8);
+    if (load_file(&fl)) {
+        //success
+        printf("loaded file from: %u to: %u\n", fl.dest_addr, fl.file_end);
+    } else {
+        //error
+        printf("file load error: %u\n", fl.error_code);
+    }
+
+
     printf("Enter test number:\n");
     if (scanf("%u", &test_number)) {
         if (test_number >= MATH_TEST_COUNT) test_number = 0;
@@ -53,7 +72,7 @@ void main() {
 
         case 3:
             //printf("lag: %i spare: %i\n", lag_count, wait_count);
-            snprintf(debug_buffer, 64, "lag: %i spare: %i\n", lag_count, wait_count);
+            snprintf(debug_buffer, 64, "lag: %i spare: %i        \n", lag_count, wait_count);
             print_emul_debug(debug_buffer);
             break;
 

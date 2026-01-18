@@ -1,6 +1,25 @@
 #include "math_tests.h"
 #include "x16.h"
 
+//    ----macro schenanigans
+#define REPEAT1(a, i)   a(i)
+#define REPEAT2(a, i)   REPEAT1(a, i) REPEAT1(a, i+1)
+#define REPEAT4(a, i)   REPEAT2(a, i) REPEAT2(a, i+2)
+#define REPEAT8(a, i)   REPEAT4(a, i) REPEAT4(a, i+4)
+#define REPEAT16(a, i)  REPEAT8(a, i) REPEAT8(a, i+8)
+#define REPEAT32(a, i)  REPEAT16(a, i) REPEAT16(a, i+16)
+#define REPEAT64(a, i)  REPEAT32(a, i) REPEAT32(a, i+32)
+
+#define REPEAT_N(n, a)  REPEAT##n(a, 0)
+
+// _uConv16 w has to exist in scope for this btw
+#define VERA_TEST_REPEAT(i)    w.u8_h = vera->DATA1;\
+        w.u8_l = vera->DATA1;\
+        vera->DATA0 = w.u16 + (int8_t)vera->DATA1;\
+
+
+//  ----
+
 #define TEST    4
 #define TEST_SIZE   64
 uint16_t test_arr[TEST * TEST_SIZE] = { 0 };
@@ -15,6 +34,8 @@ void MathTestsinit() {
     uint8_t h = 0;
     uint8_t j[TEST_SIZE + 1] = { 0 };
 
+
+
     //set test table in VRAM
     vera->CTRL = 0;
     vera->ADDRx_H = 0x10;
@@ -22,6 +43,8 @@ void MathTestsinit() {
     vera->ADDRx_L = 0;
 
     for (h = 0; h < TEST_SIZE; h++) {
+        vera->DATA0 = h + 1;
+        vera->DATA0 = h + 1;
         vera->DATA0 = h + 1;
     }
     vera->DATA0 = 0;
@@ -75,14 +98,28 @@ void MathTest(_eMathTest t) {
             w.u8_h = vera->DATA1;
             while (w.u8_h != 0) {
                 w.u8_l = vera->DATA1;
-                vera->DATA0 = w.u16 + (int8_t)HIGH_RAM_8(i + 0x1000);
+                vera->DATA0 = w.u16 + (int8_t)vera->DATA1;
                 w.u8_h = vera->DATA1;
-                i++;
-                //EMU_DEBUG_1(i);
+                //i++;
             }
         }
         break;
 
+        // so much effort with this stupid macro only for it to be slightly slower
+        // nvm the other function was wrong, this is slightly faster
+    case MATH_TEST_VERA_REPEAT_MACRO:
+        vera->CTRL = 1;
+        vera->ADDRx_H = (INC_1 << 4);
+
+        for (j = 0; j < TEST; j++) {
+            vera->ADDRx_M = 0;
+            vera->ADDRx_L = 0;
+
+            REPEAT_N(64, VERA_TEST_REPEAT)
+
+        }
+
+        break;
 
     default:
         break;
