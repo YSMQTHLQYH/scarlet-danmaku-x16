@@ -19,13 +19,13 @@ typedef struct {
     //_sZsmHeader* song_header; probably replaced with some macro
     _eZsmPlayerState state;
     uint8_t start_bank;
-    uint8_t end_bank;
+    union { uint8_t end_bank; uint8_t load_error_code; };
 
     // current byte being read
     // the actual memory adress, so index_h ranges only from 0xA0 to 0xBF
     union {
         struct { uint8_t index_l; uint8_t index_h; };
-        uint16_t index;
+        uint8_t* index;
     };
     uint8_t index_bank;
 

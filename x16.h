@@ -46,6 +46,7 @@ uint8_t load_file(_sFileLoadCtx* ctx);
 
 #define RAM_BANK_SIZE   0x2000
 #define HIGH_RAM_START  0xA000
+#define HIGH_RAM_END    0xBFFF
 #define HIGH_RAM_8(i)   *(uint8_t*)(HIGH_RAM_START + i)
 #define HIGH_RAM_16(i)  *(uint16_t*)(HIGH_RAM_START + i + i)
 extern volatile uint8_t* const ram_bank;
@@ -54,6 +55,7 @@ extern volatile uint8_t* const ram_bank;
 //I don't think it's actually called "high rom" but whatever it makes sense
 #define ROM_BANK_SIZE   0x4000
 #define HIGH_ROM_START  0xC000
+// i'll implement high rom end if I ever use it
 #define HIGH_ROM_8(i)   *(uint8_t*)(HIGH_ROM_START + i)
 #define HIGH_ROM_16(i)  *(uint16_t*)(HIGH_ROM_START + i + i)
 extern volatile uint8_t* const rom_bank;
@@ -122,6 +124,15 @@ typedef struct
 
 extern volatile _sVeraReg* const vera;
 
+// all on page 1
+
+// PSG reg 0 = 0xF9C0
+#define VERA_REG_PSG_M    0xF9
+#define VERA_REG_PSG_L    0xC0
+// palette reg 0 = 0xFA00
+#define VERA_REG_PALETTE_M    0xFA //low starts at 00
+// spritte attributes reg 0 = 0xFC00
+#define VERA_REG_SPRITE_ATT_M    0xFC
 
 //   ---- debug emulator api thing
 
