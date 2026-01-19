@@ -134,6 +134,17 @@ extern volatile _sVeraReg* const vera;
 // spritte attributes reg 0 = 0xFC00
 #define VERA_REG_SPRITE_ATT_M    0xFC
 
+
+
+//   ---- OPM (FM chip)
+extern volatile uint8_t* const OPM_addr;
+extern volatile uint8_t* const OPM_data;
+#define OPM_STATUS      (*OPM_data)
+#define OPM_FLAG_BUSY   0x80
+
+void OpmWrite(uint8_t addr, uint8_t data);
+
+
 //   ---- debug emulator api thing
 
 #define EMU_DEBUG_1(a)  *(uint8_t*)0x9FB9 = a;

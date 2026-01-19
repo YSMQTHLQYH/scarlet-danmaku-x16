@@ -15,24 +15,47 @@ uint8_t last_tick = 0, current_tick = 0;
 void main() {
     uint16_t wait_count = 0, lag_count = 0;
     uint8_t test_counter = 0, test_number = 0;
-    uint16_t i = 0;
-    char test_song_file_name[] = "out/greenmotor.zsm";
+    char* selected_song = 0;
+    uint8_t song_name_length = 0;
+    char test_song_file_name_1[] = "test assets/greenmotor.zsm";
+#define SONG_NAME_1_LENGTH    12 + 14
+    char test_song_file_name_2[] = "test assets/splashwave.zsm";
+#define SONG_NAME_2_LENGTH    12 + 14
+    char test_song_file_name_3[] = "test assets/all ur base.zsm";
+#define SONG_NAME_3_LENGTH    12 + 15
 
     printf("Hello, World!\n");
 
 
+    printf("enter 1 - 3 to play load, anything else to skip\n");
+    switch (getchar()) {
+    case '1':
+        selected_song = test_song_file_name_1;
+        song_name_length = SONG_NAME_1_LENGTH;
+        break;
+    case '2':
+        selected_song = test_song_file_name_2;
+        song_name_length = SONG_NAME_2_LENGTH;
+        break;
+    case '3':
+        selected_song = test_song_file_name_3;
+        song_name_length = SONG_NAME_3_LENGTH;
+        break;
+    }
 
-    if (ZSM_load(test_song_file_name, 18, 8)) {
-        //success
-        printf("loaded song from bank: %u to bank: %u\n", zsm.start_bank, zsm.end_bank);
-        printf("\nenter \'y\' to play song, anything to skip\n");
-        if (getchar() == 'y') {
-            printf("playing\n");
-            ZSM_play();
+    if (selected_song != 0) {
+        if (ZSM_load(selected_song, song_name_length, 8)) {
+            //success
+            printf("\nloaded song from bank: %u to bank: %u\n", zsm.start_bank, zsm.end_bank);
+            printf("\nenter \'y\' to play song, anything else to skip\n");
+            if (getchar() == 'y') {
+                printf("playing\n");
+                ZSM_play();
+            }
+        } else {
+            //error
+            printf("\nzsm file load error: %u\n", zsm.load_error_code);
         }
-    } else {
-        //error
-        printf("zsm file load error: %u\n", zsm.load_error_code);
     }
 
 

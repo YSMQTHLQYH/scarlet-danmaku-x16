@@ -44,9 +44,7 @@ void ZSM_tick() {
             // ---- FM_WRITE
 
             for (i = 0; i < n; i++) {
-                // pass because not implemented yet
-                ZsmNextByte();
-                ZsmNextByte();
+                OpmWrite(ZsmNextByte(), ZsmNextByte());
             }
             break;
 
@@ -58,10 +56,9 @@ void ZSM_tick() {
         }
     }
 zsm_tick_end:
-    if (zsm.delay_ticks_left != 1) EMU_DEBUG_1(zsm.delay_ticks_left);
     if (zsm.delay_ticks_left == 0) {
         // ---- EOF
-
+        print_emul_debug("Song end point reached");
         //TODO: implement looping
         ZSM_stop();
     }
@@ -78,13 +75,17 @@ static uint8_t ZsmNextByte() {
 
 static void StopAllPlayingSounds() {
     uint8_t i;
-    // ---- PSG
+    //  ---- PSG
     vera->CTRL = 0x00; // using DATA0 for PSG loading
     vera->ADDRx_H = 0x11;// using addr_inc = 1, all registers are on page 1 (second half)
     vera->ADDRx_M = VERA_REG_PSG_M;
     vera->ADDRx_L = VERA_REG_PSG_L;
     for (i = 0; i < 64; i++) {
         vera->DATA0 = 0;
+    }
+    //  ---- OPM
+    for (i = 0; i < 8; i++) {
+        OpmWrite(0x08, i);
     }
 }
 

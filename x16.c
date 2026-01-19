@@ -1,17 +1,44 @@
 #include "x16.h"
 
-volatile uint8_t* const ram_bank = (uint8_t*)0x0000;
-volatile uint8_t* const rom_bank = (uint8_t*)0x0001;
-
-volatile _sVeraReg* const vera = (void*)0x9F20;
-
 typedef union {
     struct { uint8_t u8_l; uint8_t u8_h; };
     uint16_t u16;
 } _uConv16;
 
-static uint8_t a0, a1, a2;
+//  ---- memory
+volatile uint8_t* const ram_bank = (uint8_t*)0x0000;
+volatile uint8_t* const rom_bank = (uint8_t*)0x0001;
 
+
+
+//   ---- VERA
+volatile _sVeraReg* const vera = (void*)0x9F20;
+
+
+
+
+//  ---- OPM
+volatile uint8_t* const OPM_addr = (uint8_t*)0x9F40;
+volatile uint8_t* const OPM_data = (uint8_t*)0x9F41;
+
+void OpmWrite(uint8_t addr, uint8_t data) {
+    while (OPM_STATUS & OPM_FLAG_BUSY) {}//waste time while waiting for OPM to finish it's thing
+    // OPM is ready to write to
+    *OPM_addr = addr;
+    // waste a bit more time for OPM to process the addreess
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    asm("nop");
+    // ok now we "should" be ready
+    *OPM_data = data;
+}
+
+
+//  ---- files
+
+static uint8_t a0, a1, a2;
 uint8_t load_file(_sFileLoadCtx* ctx) {
     // file name
     _uConv16 w;
@@ -63,6 +90,7 @@ jmp_load_error:
 }
 
 
+// ---- emulator debugger
 
 char debug_buffer[DEBUG_BUFFER_SIZE] = { 0 };
 void print_emul_debug(char* str) {
