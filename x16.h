@@ -12,6 +12,10 @@
 #define KERNAL_SETLFS   0xFFBA
 #define KERNAL_LOAD     0xFFD5
 
+#define KERNAL_SCREEN_SET_CHARSET   0xFF62
+
+// ---- KERNAL functions
+void KernalScreenSetCharset(uint8_t charset);
 
 typedef enum {
     FILE_LOAD_IGNORE_HEADER = 0,

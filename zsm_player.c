@@ -103,18 +103,23 @@ uint8_t ZsmLoad(char* file_name, uint8_t name_length, uint8_t dest_bank) {
     SET_RAM_BANK(dest_bank);
     if (load_file(&fl)) {
         // load success
-        //printf("loaded file from: %u to: %u\n", fl.dest_addr, fl.file_end);
+
+        // load function handles ram_bank and leaves it at the end of file
+        // saving it now because we need to switch bank to check header
+        zsm.end_bank = *ram_bank;
+        SET_RAM_BANK(dest_bank);
+
         if (ZSM_HEADER.magic_header[0] != 0x7A || ZSM_HEADER.magic_header[1] != 0x6D) {
             //whatever was loaded was NOT a .zsm file
             EMU_DEBUG_1(ZSM_HEADER.magic_header[0]);
             EMU_DEBUG_2(ZSM_HEADER.magic_header[1]);
-            //zsm.state = ZSM_STATE_NO_SONG_LOADED;
-            //return 0;
+            zsm.state = ZSM_STATE_NO_SONG_LOADED;
+            return 0;
         }
         // thing loaded is a valid .zsm file
         zsm.state = ZSM_STATE_STOPPED;
         zsm.start_bank = dest_bank;
-        zsm.end_bank = *ram_bank; // load function handles ram_bank and leaves it at the end of file
+
         zsm.index = (uint8_t*)(ZSM_START + sizeof(_sZsmHeader));
         zsm.index_bank = dest_bank;
         zsm.delay_ticks_left = 1;

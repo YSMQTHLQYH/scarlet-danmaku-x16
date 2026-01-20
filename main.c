@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "x16.h"
 #include "zsm_player.h"
+#include "text.h"
 
 #include "math_tests.h"
 
@@ -11,6 +12,7 @@ void Update();
 
 void test_sprite() {
     static union { uint16_t w; uint8_t b[2]; } pos = { 0 };
+    uint16_t c;
     vera->CTRL = 0x00;
     vera->DC0.VIDEO = 0x61;
     vera->DC0.HSCALE = 64;
@@ -18,17 +20,20 @@ void test_sprite() {
     vera->ADDRx_H = 0x11;
     vera->ADDRx_M = VERA_REG_SPRITE_ATTR_M;
     vera->ADDRx_L = 0;
-    vera->DATA0 = 0b10000001;
-    vera->DATA0 = 0x0F;
-    pos.w += 0x0080;
+    c = (FONT_4BPP_START) << 3;
+    c += 0xE9;
+    vera->DATA0 = (uint8_t)c; // addr 12-5
+    vera->DATA0 = (uint8_t)(c >> 8); // addr 16-13
+    pos.w += 0x0280;
     vera->DATA0 = pos.b[1];//x
     vera->DATA0 = 0;
     vera->DATA0 = 0x7F;//y
     vera->DATA0 = 0;
-    vera->DATA0 = 0x0C;
-    vera->DATA0 = 0x02;
+    vera->DATA0 = 0x0C;//z, flip
+    vera->DATA0 = 0x00;//size, palete
 }
 
+static void Init();
 
 uint8_t last_tick = 0, current_tick = 0;
 void main() {
@@ -45,6 +50,7 @@ void main() {
 
     printf("Hello, World!\n");
 
+    Init();
 
     printf("enter 1 - 3 to play load, anything else to skip\n");
     switch (getchar()) {
@@ -147,6 +153,17 @@ void main() {
 
     }
 
+}
+
+static void Init() {
+    uint8_t s;
+    s = HijackRomCharset(12, 4, 2);
+    KernalScreenSetCharset(3);
+    if (s == 0) {
+        printf("Hijacked KERNAL font successfully\n");
+    } else {
+        printf("Failed to hijack KERNAL font\n");
+    }
 }
 
 void Update() {

@@ -36,9 +36,17 @@ void OpmWrite(uint8_t addr, uint8_t data) {
 }
 
 
+//  ---- assorted KERNAL functions
+static uint8_t a0, a1, a2;
+void KernalScreenSetCharset(uint8_t charset) {
+    a0 = charset;
+    asm("lda %v", a0);
+    asm("jsr %w", KERNAL_SCREEN_SET_CHARSET);
+}
+
 //  ---- files
 
-static uint8_t a0, a1, a2;
+
 uint8_t load_file(_sFileLoadCtx* ctx) {
     // file name
     _uConv16 w;
