@@ -15,8 +15,9 @@
 // _uConv16 w has to exist in scope for this btw
 #define VERA_TEST_REPEAT(i)    w.u8_h = vera->DATA1;\
         w.u8_l = vera->DATA1;\
+        w.u16 += (int8_t)vera->DATA1;\
         vera->DATA0 = w.u16 + (int8_t)vera->DATA1;\
-
+// comment "w.u16 += (int8_t)vera->DATA1;\" line out for 8 bit second number
 
 //  ----
 
@@ -46,13 +47,15 @@ void MathTestsinit() {
         vera->DATA0 = h + 1;
         vera->DATA0 = h + 1;
         vera->DATA0 = h + 1;
+        // comment this one out for 8 bit second number
+        vera->DATA0 = h + 1;
     }
     vera->DATA0 = 0;
     //set high ram
     *ram_bank = 1;
     for (i = 0; i < RAM_BANK_SIZE; i++) {
         HIGH_RAM_8(i) = (uint8_t)i;
-        if (i == 0) { HIGH_RAM_8(i) = 1; }
+        if ((uint8_t)i == 0) { HIGH_RAM_8(i) = 1; }
     }
 }
 
@@ -68,7 +71,9 @@ void MathTest(_eMathTest t) {
     case MATH_TEST_FOR:
         for (j = 0; j < TEST; j++) {
             for (i = 0; i < TEST_SIZE; i++) {
-                vera->DATA0 = HIGH_RAM_16(i) + (int8_t)HIGH_RAM_8(i + 0x1000);
+                //vera->DATA0 = HIGH_RAM_16(i) + (int8_t)HIGH_RAM_8(i + 0x1000);
+                HIGH_RAM_16(i) += HIGH_RAM_16(i + 0x0800);
+                vera->DATA0 = HIGH_RAM_16(i);
             }
         }
         break;
@@ -78,7 +83,9 @@ void MathTest(_eMathTest t) {
             HIGH_RAM_16(TEST_SIZE) = 0;
             i = 0;
             while (HIGH_RAM_16(i) != 0) {
-                vera->DATA0 = HIGH_RAM_16(i) + (int8_t)HIGH_RAM_8(i + 0x1000);
+                //vera->DATA0 = HIGH_RAM_16(i) + (int8_t)HIGH_RAM_8(i + 0x1000);
+                HIGH_RAM_16(i) += HIGH_RAM_16(i + 0x0800);
+                vera->DATA0 = HIGH_RAM_16(i);
                 i++;
             }
         }
@@ -98,6 +105,7 @@ void MathTest(_eMathTest t) {
             w.u8_h = vera->DATA1;
             while (w.u8_h != 0) {
                 w.u8_l = vera->DATA1;
+                w.u16 += (int8_t)vera->DATA1; // comment this line out for 8 bit second number
                 vera->DATA0 = w.u16 + (int8_t)vera->DATA1;
                 w.u8_h = vera->DATA1;
                 //i++;

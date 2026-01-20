@@ -131,9 +131,32 @@ extern volatile _sVeraReg* const vera;
 #define VERA_REG_PSG_L    0xC0
 // palette reg 0 = 0xFA00
 #define VERA_REG_PALETTE_M    0xFA //low starts at 00
-// spritte attributes reg 0 = 0xFC00
-#define VERA_REG_SPRITE_ATT_M    0xFC
 
+// spritte attributes reg 0 = 0xFC00
+// ranges from 0x1FC00 to 0x1FFFF
+#define VERA_REG_SPRITE_ATTR_M  0xFC 
+#define SPRITE_ATTR_SIZE        8
+
+typedef struct {
+    uint8_t addr_l; // bits 12-5 of actual addr (of image data)
+    union {
+        uint8_t addr_h; // bits 16-13 (bits 3-0 of addr_h)
+        uint8_t mode; //bit 7 of addr_h register; 0 =4 bpp, 1 = 8bpp
+    };
+    uint8_t x_l; // bits 7-0 of position
+    uint8_t x_h; // bits 9-8
+    uint8_t y_l; // bits 7-0 of position
+    uint8_t y_h; // bits 9-8
+    union {
+        uint8_t flip; // bit 0 = h-flip, bit 1 = v-flip
+        uint8_t z_depth; // bits 3-2; 0 = sprite dissabled, 1 = behind both layers, 2 = between the layers, 3 = on top of both layers
+        uint8_t collision_mask; // bits 7-4
+    };
+    union {
+        uint8_t palette_offset; // bits 3-0
+        uint8_t size; // bits 5-4 = width, bits 7-6 = height; 0/1/2/3 = 8/16/32/64 px
+    };
+}_sSpriteAttr;
 
 
 //   ---- OPM (FM chip)

@@ -9,6 +9,25 @@
 
 void Update();
 
+void test_sprite() {
+    static union { uint16_t w; uint8_t b[2]; } pos = { 0 };
+    vera->CTRL = 0x00;
+    vera->DC0.VIDEO = 0x61;
+    vera->DC0.HSCALE = 64;
+    vera->DC0.VSCALE = 64;
+    vera->ADDRx_H = 0x11;
+    vera->ADDRx_M = VERA_REG_SPRITE_ATTR_M;
+    vera->ADDRx_L = 0;
+    vera->DATA0 = 0b10000001;
+    vera->DATA0 = 0x0F;
+    pos.w += 0x0080;
+    vera->DATA0 = pos.b[1];//x
+    vera->DATA0 = 0;
+    vera->DATA0 = 0x7F;//y
+    vera->DATA0 = 0;
+    vera->DATA0 = 0x0C;
+    vera->DATA0 = 0x02;
+}
 
 
 uint8_t last_tick = 0, current_tick = 0;
@@ -44,13 +63,13 @@ void main() {
     }
 
     if (selected_song != 0) {
-        if (ZSM_load(selected_song, song_name_length, 8)) {
+        if (ZsmLoad(selected_song, song_name_length, 8)) {
             //success
             printf("\nloaded song from bank: %u to bank: %u\n", zsm.start_bank, zsm.end_bank);
             printf("\nenter \'y\' to play song, anything else to skip\n");
             if (getchar() == 'y') {
                 printf("playing\n");
-                ZSM_play();
+                ZsmPlay();
             }
         } else {
             //error
@@ -83,7 +102,8 @@ void main() {
     //  --- main loop
     while (1) {
         //Update();
-        ZSM_tick();
+        ZsmTick();
+        test_sprite();
 
         switch (test_counter) {
         case 0:

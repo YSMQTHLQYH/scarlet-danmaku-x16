@@ -9,7 +9,7 @@ static void StopAllPlayingSounds();
 
 _sZsmPlayer zsm;
 
-void ZSM_tick() {
+void ZsmTick() {
     uint8_t cmd, n;
     uint8_t i;
     // exit if we aren't playing anything
@@ -60,7 +60,7 @@ zsm_tick_end:
         // ---- EOF
         print_emul_debug("Song end point reached");
         //TODO: implement looping
-        ZSM_stop();
+        ZsmStop();
     }
 
 }
@@ -90,10 +90,10 @@ static void StopAllPlayingSounds() {
 }
 
 
-uint8_t ZSM_load(char* file_name, uint8_t name_length, uint8_t dest_bank) {
+uint8_t ZsmLoad(char* file_name, uint8_t name_length, uint8_t dest_bank) {
     _sFileLoadCtx fl = { 0 };
 
-    if (zsm.state != ZSM_STATE_NO_SONG_LOADED) { ZSM_stop(); }
+    if (zsm.state != ZSM_STATE_NO_SONG_LOADED) { ZsmStop(); }
 
     fl.filename = file_name;
     fl.name_lenght = name_length;
@@ -129,7 +129,7 @@ uint8_t ZSM_load(char* file_name, uint8_t name_length, uint8_t dest_bank) {
 
 }
 
-void ZSM_stop() {
+void ZsmStop() {
     if (zsm.state == ZSM_STATE_NO_SONG_LOADED) { return; }
     zsm.state = ZSM_STATE_STOPPED;
     zsm.index = (uint8_t*)(ZSM_START + sizeof(_sZsmHeader));
@@ -138,14 +138,14 @@ void ZSM_stop() {
     StopAllPlayingSounds();
 }
 
-void ZSM_pause() {
+void ZsmPause() {
     if (zsm.state == ZSM_STATE_PLAYING) {
         zsm.state = ZSM_STATE_PAUSED;
         StopAllPlayingSounds();
     }
 }
 
-void ZSM_play() {
+void ZsmPlay() {
     if (zsm.state == ZSM_STATE_NO_SONG_LOADED) { return; }
     zsm.state = ZSM_STATE_PLAYING;
 }

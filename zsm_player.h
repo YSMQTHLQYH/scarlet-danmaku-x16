@@ -55,17 +55,17 @@ typedef struct {
 
 
 // call from main loop on every frame
-void ZSM_tick();
+void ZsmTick();
 
 // returns 0 on load error, 1 on success
 // does not begin playback
-uint8_t ZSM_load(char* file_name, uint8_t name_length, uint8_t dest_bank);
+uint8_t ZsmLoad(char* file_name, uint8_t name_length, uint8_t dest_bank);
 // stops and resets to beginning of song
-void ZSM_stop();
+void ZsmStop();
 // pauses song (to be resumed)
-void ZSM_pause();
+void ZsmPause();
 // begin / resume song
-void ZSM_play();
+void ZsmPlay();
 
 
 
