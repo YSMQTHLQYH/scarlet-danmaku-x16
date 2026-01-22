@@ -164,6 +164,8 @@ static void Init() {
     } else {
         printf("Failed to hijack KERNAL font\n");
     }
+    PrintSpriteStr("hi :d", 0, 128, 118, 0);
+    PrintSpriteStr("maybe", 0, 100, 200, 10);
 }
 
 void Update() {
