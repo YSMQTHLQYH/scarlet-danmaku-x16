@@ -25,4 +25,17 @@ void FreeSpriteStr(uint8_t str_slot);
 
 
 
+//  ---- Conversions to str
+
+
+
+// does NOT add the null terminator, allways sets c[0] to c[2]
+void StrUint8Dec(uint8_t u, char* c);
+// does NOT add the null terminator, allways sets c[0] to c[1]
+void StrUint8Hex(uint8_t u, char* c);
+// does NOT add the null terminator, allways sets c[0] to c[3]
+void StrUint16Hex(uint16_t u, char* c);
+
+
+
 #endif

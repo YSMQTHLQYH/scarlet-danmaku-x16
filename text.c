@@ -194,3 +194,45 @@ void FreeSpriteStr(uint8_t str_slot) {
         }
     }
 }
+
+
+//  ---- Conversions to str
+
+void StrUint8Dec(uint8_t u, char* c) {
+    uint8_t b = 0, a = u;
+    if (a > 199) {
+        a -= 200;
+        c[0] = '2';
+    } else if (a > 99) {
+        a -= 100;
+        c[0] = '1';
+    } else { c[0] = ' '; }
+
+    while (a > 9) {
+        a -= 10;
+        b++;
+    }
+    c[1] = '0' + b;
+    c[2] = '0' + a;
+}
+void StrUint8Hex(uint8_t u, char* c) {
+    uint8_t a = u >> 4;
+    uint8_t o = (a > 9) ? 0x37 : '0';
+    c[0] = o + a;
+    a = u & 0x0F;
+    o = (a > 9) ? 0x37 : '0';
+    c[1] = o + a;
+}
+void StrUint16Hex(uint16_t u, char* c) {
+    uint16_t m = 0xF000;
+    uint16_t a;
+    uint8_t o, i, s = 12;
+    for (i = 0; i < 4; i++) {
+        a = u & m;
+        a >>= s;
+        o = (a > 9) ? 0x37 : '0';
+        c[i] = o + a;
+        s -= 4;
+        m >>= 4;
+    }
+}

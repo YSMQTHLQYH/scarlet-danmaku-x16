@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 typedef enum {
+    MATH_TEST_NOTHING,
     MATH_TEST_FOR,
     MATH_TEST_WHILE,
     MATH_TEST_VERA_UNTIL0,

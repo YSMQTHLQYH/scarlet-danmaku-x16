@@ -68,6 +68,9 @@ void MathTest(_eMathTest t) {
     vera->ADDRx_H = (INC_0 << 4);
 
     switch (t) {
+    case MATH_TEST_NOTHING:
+        // does nothing, just to measure baseline lag of everything else
+        break;
     case MATH_TEST_FOR:
         for (j = 0; j < TEST; j++) {
             for (i = 0; i < TEST_SIZE; i++) {

@@ -35,18 +35,22 @@ void test_sprite() {
 
 static void Init();
 
+char test_song_file_name_1[] = "test assets/greenmotor.zsm";
+#define SONG_NAME_1_LENGTH    12 + 14
+char test_song_file_name_2[] = "test assets/splashwave.zsm";
+#define SONG_NAME_2_LENGTH    12 + 14
+char test_song_file_name_3[] = "test assets/all ur base.zsm";
+#define SONG_NAME_3_LENGTH    12 + 15
+
+char str_lag_count[] = "lag---,----";
+
 uint8_t last_tick = 0, current_tick = 0;
 void main() {
     uint16_t wait_count = 0, lag_count = 0;
     uint8_t test_counter = 0, test_number = 0;
     char* selected_song = 0;
     uint8_t song_name_length = 0;
-    char test_song_file_name_1[] = "test assets/greenmotor.zsm";
-#define SONG_NAME_1_LENGTH    12 + 14
-    char test_song_file_name_2[] = "test assets/splashwave.zsm";
-#define SONG_NAME_2_LENGTH    12 + 14
-    char test_song_file_name_3[] = "test assets/all ur base.zsm";
-#define SONG_NAME_3_LENGTH    12 + 15
+
 
     printf("Hello, World!\n");
 
@@ -124,8 +128,11 @@ void main() {
 
         case 3:
             //printf("lag: %i spare: %i\n", lag_count, wait_count);
-            snprintf(debug_buffer, 64, "lag: %i spare: %i        \n", lag_count, wait_count);
-            print_emul_debug(debug_buffer);
+            //snprintf(debug_buffer, 64, "lag: %i spare: %i        \n", lag_count, wait_count);
+            //print_emul_debug(debug_buffer);
+            StrUint8Dec(lag_count, &str_lag_count[3]);
+            StrUint16Hex(wait_count, &str_lag_count[7]);
+            PrintSpriteStr(str_lag_count, 1, 216, 216, 0);
             break;
 
         default:
@@ -164,8 +171,6 @@ static void Init() {
     } else {
         printf("Failed to hijack KERNAL font\n");
     }
-    PrintSpriteStr("hi :d", 0, 128, 118, 0);
-    PrintSpriteStr("maybe", 0, 100, 200, 10);
 }
 
 void Update() {
