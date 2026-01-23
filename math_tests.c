@@ -52,7 +52,7 @@ void MathTestsinit() {
     }
     vera->DATA0 = 0;
     //set high ram
-    *ram_bank = 1;
+    SET_RAM_BANK(1);
     for (i = 0; i < RAM_BANK_SIZE; i++) {
         HIGH_RAM_8(i) = (uint8_t)i;
         if ((uint8_t)i == 0) { HIGH_RAM_8(i) = 1; }
@@ -72,6 +72,7 @@ void MathTest(_eMathTest t) {
         // does nothing, just to measure baseline lag of everything else
         break;
     case MATH_TEST_FOR:
+        SET_RAM_BANK(1);
         for (j = 0; j < TEST; j++) {
             for (i = 0; i < TEST_SIZE; i++) {
                 //vera->DATA0 = HIGH_RAM_16(i) + (int8_t)HIGH_RAM_8(i + 0x1000);
@@ -82,12 +83,13 @@ void MathTest(_eMathTest t) {
         break;
 
     case MATH_TEST_WHILE:
+        SET_RAM_BANK(1);
         for (j = 0; j < TEST; j++) {
             HIGH_RAM_16(TEST_SIZE) = 0;
             i = 0;
             while (HIGH_RAM_16(i) != 0) {
                 //vera->DATA0 = HIGH_RAM_16(i) + (int8_t)HIGH_RAM_8(i + 0x1000);
-                HIGH_RAM_16(i) += HIGH_RAM_16(i + 0x0800);
+                HIGH_RAM_16(i) += HIGH_RAM_16((i & 0x03FF) + 0x0800);
                 vera->DATA0 = HIGH_RAM_16(i);
                 i++;
             }

@@ -15,6 +15,7 @@
 #define KERNAL_SCREEN_SET_CHARSET   0xFF62
 
 // ---- KERNAL functions
+uint8_t KernalReadTimer();
 void KernalScreenSetCharset(uint8_t charset);
 
 typedef enum {
@@ -54,7 +55,7 @@ uint8_t load_file(_sFileLoadCtx* ctx);
 #define HIGH_RAM_8(i)   *(uint8_t*)(HIGH_RAM_START + i)
 #define HIGH_RAM_16(i)  *(uint16_t*)(HIGH_RAM_START + i + i)
 extern volatile uint8_t* const ram_bank;
-#define SET_RAM_BANK(bank)  (*ram_bank) = bank;
+#define SET_RAM_BANK(bank)  (*ram_bank) = bank
 
 //I don't think it's actually called "high rom" but whatever it makes sense
 #define ROM_BANK_SIZE   0x4000
@@ -63,9 +64,15 @@ extern volatile uint8_t* const ram_bank;
 #define HIGH_ROM_8(i)   *(uint8_t*)(HIGH_ROM_START + i)
 #define HIGH_ROM_16(i)  *(uint16_t*)(HIGH_ROM_START + i + i)
 extern volatile uint8_t* const rom_bank;
-#define SET_ROM_BANK(bank)  (*rom_bank) = bank;
+#define SET_ROM_BANK(bank)  (*rom_bank) = bank
 
 
+//  ---- IRQ
+#define KERNAL_CINV (void**)0x0314
+// replaces the current function called on IRQ interrupt by func_pointer
+void IrqSetVector(void* func_pointer);
+// returns the IRQ function pointer (so we can extend the interrupt function instead of replacing it)
+void* IrqGetVector();
 
 //  ---- vera
 

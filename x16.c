@@ -1,19 +1,29 @@
 #include "x16.h"
+#include "zp_utils.h"
 
-typedef union {
-    struct { uint8_t u8_l; uint8_t u8_h; };
-    uint16_t u16;
-} _uConv16;
+
 
 //  ---- memory
 volatile uint8_t* const ram_bank = (uint8_t*)0x0000;
 volatile uint8_t* const rom_bank = (uint8_t*)0x0001;
 
 
+//  ---- IRQ
+void IrqSetVector(void* func_pointer) {
+    asm("sei"); // dissables interrupts
+    *KERNAL_CINV = func_pointer;
+    asm("cli"); // re enables interrupts
+}
+void* IrqGetVector() {
+    void* v;
+    asm("sei"); // dissables interrupts, might be overkill for just reading the address but better be safe
+    v = *KERNAL_CINV;
+    asm("cli"); // re enables interrupts
+    return v;
+}
 
 //   ---- VERA
 volatile _sVeraReg* const vera = (void*)0x9F20;
-
 
 
 
@@ -38,6 +48,14 @@ void OpmWrite(uint8_t addr, uint8_t data) {
 
 //  ---- assorted KERNAL functions
 static uint8_t a0, a1, a2;
+
+// moving this to a separate function actually made it run much faster, interesting
+uint8_t KernalReadTimer() {
+    asm("jsr %w", KERNAL_RDTIM);
+    asm("sta %v", a0);
+    return a0;
+}
+
 void KernalScreenSetCharset(uint8_t charset) {
     a0 = charset;
     asm("lda %v", a0);
@@ -79,7 +97,7 @@ uint8_t load_file(_sFileLoadCtx* ctx) {
 
     // error handling
     // carry flag set if error
-#ifndef __INTELLISENSE__ // disable for intellisense to avoid false error
+#ifndef __INTELLISENSE__ // disable for intellisense to avoid false error // comment on the comment, i should reword that
     asm("bcs %g", jmp_load_error); // branches if carry set (error) // ok this works but vscode things this is an error
 #endif //vscode you stoopid
     // no error, file loaded successfully

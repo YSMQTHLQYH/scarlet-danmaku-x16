@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "x16.h"
+#include "zp_utils.h"
 #include "zsm_player.h"
 #include "text.h"
 
@@ -8,7 +9,7 @@
 
 
 
-void Update();
+//void Update();
 
 void test_sprite() {
     static union { uint16_t w; uint8_t b[2]; } pos = { 0 };
@@ -33,7 +34,9 @@ void test_sprite() {
     vera->DATA0 = 0x00;//size, palete
 }
 
+static void SetCustomIrq();
 static void Init();
+
 
 char test_song_file_name_1[] = "test assets/greenmotor.zsm";
 #define SONG_NAME_1_LENGTH    12 + 14
@@ -42,7 +45,7 @@ char test_song_file_name_2[] = "test assets/splashwave.zsm";
 char test_song_file_name_3[] = "test assets/all ur base.zsm";
 #define SONG_NAME_3_LENGTH    12 + 15
 
-char str_lag_count[] = "lag---,----";
+char str_lag_count[] = "lag--,----";
 
 uint8_t last_tick = 0, current_tick = 0;
 void main() {
@@ -51,6 +54,16 @@ void main() {
     char* selected_song = 0;
     uint8_t song_name_length = 0;
 
+    //  ---- IRQ
+    kernal_irq_func_ptr = IrqGetVector();
+    if (kernal_irq_func_ptr == 0) {
+        //  ---- something went wrong somehow
+        print_emul_debug("FAILED TO READ KERNAL VECTOR");
+        while (1) { asm("nop"); }; // might as well just crash the program at this point
+    }
+    IrqSetVector(CustomIrq);
+    // IRQ set
+    printf("Vera IEN: %x ISr: %x \n", vera->IEN, vera->ISR);
 
     printf("Hello, World!\n");
 
@@ -100,14 +113,7 @@ void main() {
     MathTestsinit();
 
     // setup for timer
-    // jsr = Jump to Subroutine
-    // This is the memory location of the RDTIM (Read Timer) Kernal Function
-    asm("jsr %w", KERNAL_RDTIM);
-    // sta = Store Accumulator
-    // This copies the value from the A register to a memory location
-    // In this case its the memory location of our "start" variable
-    asm("sta %v", last_tick);
-
+    last_tick = frame_count;
 
     //  --- main loop
     while (1) {
@@ -130,8 +136,8 @@ void main() {
             //printf("lag: %i spare: %i\n", lag_count, wait_count);
             //snprintf(debug_buffer, 64, "lag: %i spare: %i        \n", lag_count, wait_count);
             //print_emul_debug(debug_buffer);
-            StrUint8Dec(lag_count, &str_lag_count[3]);
-            StrUint16Hex(wait_count, &str_lag_count[7]);
+            StrUint8Hex(lag_count, &str_lag_count[3]);
+            StrUint16Hex(wait_count, &str_lag_count[6]);
             PrintSpriteStr(str_lag_count, 1, 216, 216, 0);
             break;
 
@@ -144,26 +150,26 @@ void main() {
         // wait for next frame
 
 
-        // Now that we have the start time
         // Get the "next" time and keep looping until it changes
-        asm("jsr %w", KERNAL_RDTIM);
-        asm("sta %v", current_tick);
+        current_tick = frame_count;
         lag_count = current_tick - last_tick;
         wait_count = 0;
         last_tick += lag_count;
         while (last_tick == current_tick) {
-            asm("jsr %w", KERNAL_RDTIM);
-            asm("sta %v", current_tick);
+            current_tick = frame_count;
             wait_count += 1;
         }
         last_tick = current_tick;
-
     }
 
 }
 
 static void Init() {
     uint8_t s;
+    //  ---- IRQ
+    vera->IEN |= 0x01; //enables VSYNC interrupt if it wasn't already for some reason
+
+    //  ---- text
     s = HijackRomCharset(12, 4, 2);
     KernalScreenSetCharset(3);
     if (s == 0) {
@@ -172,7 +178,7 @@ static void Init() {
         printf("Failed to hijack KERNAL font\n");
     }
 }
-
+/*
 void Update() {
     uint8_t c = 0;
     uint16_t i = 0, j = 0;
@@ -207,7 +213,7 @@ void Update() {
 
 
 }
-
+*/
 
 
 
