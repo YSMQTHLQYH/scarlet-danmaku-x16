@@ -1,38 +1,57 @@
 #include "profiler.h"
 #include "x16.h"
+#include "zp_utils.h"
 
-uint16_t ProfilerSegmentBuffer0[PROFILER_MAX_SEGMENTS] = { 0 };
-uint16_t ProfilerSegmentBuffer1[PROFILER_MAX_SEGMENTS] = { 0 };
+#include <stdio.h>
 
-static uint8_t current_segment_buffer = 0;
-static uint16_t* buffer = ProfilerSegmentBuffer0;
+// incremented in vsync interrupt, reset to 0 whenever read
+extern volatile uint8_t profiler_vsync_queue;
+
+uint16_t scanlines_from_frame_count = 0;
+
+uint16_t profiler_segment[PROFILER_MAX_SEGMENTS] = { 0 };
+static uint16_t last_time = 0;
 static uint8_t current_segment = 0;
 
-// time in scanlines since start of segment, going over 525 if more than a frame
-static uint16_t last_time = 0;
-// last result from RDTIM, which updates once per frame
-static uint8_t last_kernal_time = 0;
-
-uint16_t* ProfilerGetPreviousBlock() {
-    if (current_segment_buffer == 0) { return ProfilerSegmentBuffer1; } else { return ProfilerSegmentBuffer0; }
+uint16_t ProfilerGetTimestamp() {
+    uint16_t current_scanline = VeraGetScanline();
+    // offset scanline so vsync alings with current_scanline resetting back to 0
+    if (current_scanline >= SCANLINE_VSYNC) { current_scanline -= SCANLINES_PER_FRAME; }
+    current_scanline += (SCANLINES_PER_FRAME - SCANLINE_VSYNC);
+    // add the time from frames
+    while (profiler_vsync_queue) {
+        scanlines_from_frame_count += SCANLINES_PER_FRAME;
+        profiler_vsync_queue--;
+    }
+    return scanlines_from_frame_count + current_scanline;
 }
 
 void ProfilerBeginBlock() {
-    if (current_segment_buffer == 0) {
-        current_segment_buffer = 1;
-        buffer = ProfilerSegmentBuffer1;
-    } else {
-        current_segment_buffer = 0;
-        buffer = ProfilerSegmentBuffer0;
+    uint8_t i;
+    for (i = 0; i < PROFILER_MAX_SEGMENTS; i++) {
+        profiler_segment[i] = 0;
     }
+    last_time = ProfilerGetTimestamp();
     current_segment = 0;
 }
+void ProfilerEndSegment() {
+    uint16_t t = ProfilerGetTimestamp();
 
-uint8_t ProfilerEndSegment();
+    if (t - last_time > 0x4FFF) {
+        while (1) {
+            EMU_DEBUG_1(t);
+            EMU_DEBUG_2(last_time);
+        }
+    }
 
-uint8_t ProfilerEndBlock();
-
-
-void GetTime() {
-
+    profiler_segment[current_segment++] = t - last_time;
+    last_time = t;
 }
+uint8_t ProfilerEndBlock() {
+    uint16_t t = ProfilerGetTimestamp();
+    profiler_segment[current_segment++] = t - last_time;
+    //last_time = t;
+    return current_segment;
+}
+
+

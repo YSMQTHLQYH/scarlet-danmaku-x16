@@ -2,6 +2,7 @@
 #include "zp_utils.h"
 
 
+static uint8_t a0, a1, a2;
 
 //  ---- memory
 volatile uint8_t* const ram_bank = (uint8_t*)0x0000;
@@ -10,6 +11,7 @@ volatile uint8_t* const rom_bank = (uint8_t*)0x0001;
 
 //  ---- IRQ
 void IrqSetVector(void* func_pointer) {
+
     asm("sei"); // dissables interrupts
     *KERNAL_CINV = func_pointer;
     asm("cli"); // re enables interrupts
@@ -25,6 +27,25 @@ void* IrqGetVector() {
 //   ---- VERA
 volatile _sVeraReg* const vera = (void*)0x9F20;
 
+uint16_t VeraGetScanline() {
+    _uConv16 sl;
+    asm("lda $9F28"); // A = vera->scanline_l
+    asm("sta %v", a0); // low byte of sl (I hope) = A
+    // the BIT instruction sets flags for bits 7 and 6 specifically
+    // ignoring any mask so we don't have to load anything into A
+    // weird but ok
+    asm("bit $9F26"); // Z = ((vera->IEN & A) == 0), N = bit 7 of vera->IEN, V = bit 6 of vera->IEN 
+    asm("lda #00"); // i forgor this
+#ifndef __INTELLISENSE__
+    asm("bvc %g", get_scanline_end);  // branches if V == 0
+#endif // vscode this is getting old
+    asm("lda #01");
+get_scanline_end:
+    asm("sta %v", a1);
+    sl.u8_l = a0;
+    sl.u8_h = a1;
+    return sl.u16;
+}
 
 
 //  ---- OPM
@@ -47,7 +68,6 @@ void OpmWrite(uint8_t addr, uint8_t data) {
 
 
 //  ---- assorted KERNAL functions
-static uint8_t a0, a1, a2;
 
 // moving this to a separate function actually made it run much faster, interesting
 uint8_t KernalReadTimer() {

@@ -76,7 +76,7 @@ uint8_t HijackRomCharset(uint8_t charset, uint8_t font_bpp, uint8_t color) {
 
 //  ---- sprite text
 
-#define TEXT_SPRITE_STR_SLOTS   8
+#define TEXT_SPRITE_STR_SLOTS   16
 uint8_t sprite_str_slot[TEXT_SPRITE_STR_SLOTS] = { 0 };
 // index is the number of hardware sprite, value is which str slot owns it (whoever called dibs on it first)
 // 0 means no slot has claimed it (and it's up for grabs)

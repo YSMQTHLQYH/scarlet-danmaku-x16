@@ -5,6 +5,7 @@
 #include "zsm_player.h"
 #include "text.h"
 
+#include "profiler.h"
 #include "math_tests.h"
 
 
@@ -34,8 +35,8 @@ void test_sprite() {
     vera->DATA0 = 0x00;//size, palete
 }
 
-static void SetCustomIrq();
 static void Init();
+static void PrintPrevProfBlock();
 
 
 char test_song_file_name_1[] = "test assets/greenmotor.zsm";
@@ -50,9 +51,12 @@ char str_lag_count[] = "lag--,----";
 uint8_t last_tick = 0, current_tick = 0;
 void main() {
     uint16_t wait_count = 0, lag_count = 0;
-    uint8_t test_counter = 0, test_number = 0;
+    uint8_t test_number = 0;
     char* selected_song = 0;
     uint8_t song_name_length = 0;
+
+    //debug
+    *(uint8_t*)0x9FB0 = 1;
 
     //  ---- IRQ
     kernal_irq_func_ptr = IrqGetVector();
@@ -63,7 +67,6 @@ void main() {
     }
     IrqSetVector(CustomIrq);
     // IRQ set
-    printf("Vera IEN: %x ISr: %x \n", vera->IEN, vera->ISR);
 
     printf("Hello, World!\n");
 
@@ -89,11 +92,7 @@ void main() {
         if (ZsmLoad(selected_song, song_name_length, 8)) {
             //success
             printf("\nloaded song from bank: %u to bank: %u\n", zsm.start_bank, zsm.end_bank);
-            printf("\nenter \'y\' to play song, anything else to skip\n");
-            if (getchar() == 'y') {
-                printf("playing\n");
-                ZsmPlay();
-            }
+            ZsmPlay();
         } else {
             //error
             printf("\nzsm file load error: %u\n", zsm.load_error_code);
@@ -117,39 +116,30 @@ void main() {
 
     //  --- main loop
     while (1) {
+        ProfilerBeginBlock();
         //Update();
         ZsmTick();
+        ProfilerEndSegment();
+
         test_sprite();
+        ProfilerEndSegment();
 
-        switch (test_counter) {
-        case 0:
+        MathTest(test_number);
+        ProfilerEndSegment();
 
-            break;
-        case 1:
-            /* code */
-            break;
-        case 2:
-            MathTest(test_number);
-            break;
+        StrUint8Hex(lag_count, &str_lag_count[3]);
+        StrUint16Hex(wait_count, &str_lag_count[6]);
+        PrintSpriteStr(str_lag_count, 1, 216, 216, 0);
 
-        case 3:
-            //printf("lag: %i spare: %i\n", lag_count, wait_count);
-            //snprintf(debug_buffer, 64, "lag: %i spare: %i        \n", lag_count, wait_count);
-            //print_emul_debug(debug_buffer);
-            StrUint8Hex(lag_count, &str_lag_count[3]);
-            StrUint16Hex(wait_count, &str_lag_count[6]);
-            PrintSpriteStr(str_lag_count, 1, 216, 216, 0);
-            break;
-
-        default:
-            test_counter = 0;
-        }
-        test_counter++;
+        PrintPrevProfBlock(ProfilerEndBlock());
 
 
-        // wait for next frame
+
+        //snprintf(debug_buffer, 64, "lag: %i spare: %i        \n", lag_count, wait_count);
+        //print_emul_debug(debug_buffer);
 
 
+        // ----     wait for next frame
         // Get the "next" time and keep looping until it changes
         current_tick = frame_count;
         lag_count = current_tick - last_tick;
@@ -176,6 +166,29 @@ static void Init() {
         printf("Hijacked KERNAL font successfully\n");
     } else {
         printf("Failed to hijack KERNAL font\n");
+    }
+}
+
+char prf_str_0[] = "----";
+char prf_str_1[] = "t:----";
+static void PrintPrevProfBlock(uint8_t count) {
+    uint8_t i, j;
+    /*
+    uint16_t* block = profiler_previous_times;
+    for (i = 0; i < profiler_previous_block_segment_count; i++) {
+        prf_str_0[0] = i + '0';
+        StrUint16Hex(block[i], &prf_str_0[0]);
+        PrintSpriteStr(prf_str_0, 0, 248, 170 + (i << 3), 0);
+    }
+    StrUint16Hex(profiler_previous_block_total_time, &prf_str_1[2]);
+    PrintSpriteStr(prf_str_1, 0, 232, 170 + (i << 3), 0);
+    */
+
+    for (i = 0; i < count; i++) {
+        prf_str_0[0] = i + '0';
+        StrUint16Hex(profiler_segment[i], &prf_str_0[0]);
+        PrintSpriteStr(prf_str_0, i + 2, 248, 170 + (i << 3), 0);
+
     }
 }
 /*

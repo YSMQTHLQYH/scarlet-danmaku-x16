@@ -20,6 +20,7 @@ void CustomIrq();
 extern void* kernal_irq_func_ptr;
 
 // increases by one every frame during VSYNC
+// at start of scanline 0x1E0 (480)
 extern volatile uint8_t frame_count;
 
 

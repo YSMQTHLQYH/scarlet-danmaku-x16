@@ -134,6 +134,30 @@ void MathTest(_eMathTest t) {
 
         break;
 
+    case MATH_TEST_WASTE_TIME:
+        for (i = 0; i < 0x10; i++) {
+            for (j = 0; j < 0xA0; j++) {
+                asm("nop");
+            }
+        }
+        break;
+    case MATH_TEST_WASTE_MORE_TIME:
+        for (i = 0; i < 0x20; i++) {
+            for (j = 0; j < 0xA0; j++) {
+                asm("nop");
+            }
+        }
+        break;
+    case MATH_TEST_WASTE_EVEN_MORE_TIME:
+        for (i = 0; i < 0x80; i++) {
+            for (j = 0; j < 0xFF; j++) {
+                asm("nop");
+                asm("nop");
+                asm("nop");
+            }
+        }
+        break;
+
     default:
         break;
     }

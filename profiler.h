@@ -6,22 +6,14 @@
 #include <stdint.h>
 
 #define PROFILER_MAX_SEGMENTS   8
-// double buffers, so we can read the data from previous block
-extern uint16_t ProfilerSegmentBuffer0[PROFILER_MAX_SEGMENTS];
-extern uint16_t ProfilerSegmentBuffer1[PROFILER_MAX_SEGMENTS];
+extern uint16_t profiler_segment[PROFILER_MAX_SEGMENTS];
 
-uint16_t* ProfilerGetPreviousBlock();
+// gets timestamp in scanlines since +-program startup
+uint16_t ProfilerGetTimestamp();
 
-// begins segment 0
+
 void ProfilerBeginBlock();
-// ends segment i, begins segment i+1
-// returns i
-uint8_t ProfilerEndSegment();
-// ends segment i
-// returns i
+void ProfilerEndSegment();
 uint8_t ProfilerEndBlock();
-
-
-
 
 #endif

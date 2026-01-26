@@ -75,6 +75,8 @@ void IrqSetVector(void* func_pointer);
 void* IrqGetVector();
 
 //  ---- vera
+#define SCANLINES_PER_FRAME 525
+#define SCANLINE_VSYNC      480
 
 typedef struct {
     uint8_t CONFIG;
@@ -169,6 +171,8 @@ typedef struct {
     };
 }_sSpriteAttr;
 
+
+uint16_t VeraGetScanline();
 
 //   ---- OPM (FM chip)
 extern volatile uint8_t* const OPM_addr;
