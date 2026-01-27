@@ -4,6 +4,7 @@
 #include "zp_utils.h"
 #include "zsm_player.h"
 #include "text.h"
+#include "bitmap_layer.h"
 
 #include "profiler.h"
 #include "math_tests.h"
@@ -68,9 +69,7 @@ void main() {
     IrqSetVector(CustomIrq);
     // IRQ set
 
-    printf("Hello, World!\n");
 
-    Init();
 
     printf("enter 1 - 3 to play load, anything else to skip\n");
     switch (getchar()) {
@@ -107,9 +106,10 @@ void main() {
     printf("Test #: %u", test_number);
 
 
-    //snprintf(debug_buffer, 255, "hello");
-    //print_emul_debug(debug_buffer);
+    //    ---- done with placeholder print stuff
+
     MathTestsinit();
+    Init();
 
     // setup for timer
     last_tick = frame_count;
@@ -167,12 +167,20 @@ static void Init() {
     } else {
         printf("Failed to hijack KERNAL font\n");
     }
+
+    //  ---- graphics
+    vera->CTRL = 0x00;
+    vera->DC0.VIDEO = 0x61;
+    vera->DC0.HSCALE = 64;
+    vera->DC0.VSCALE = 64;
+
+    BitmapInit(0);
 }
 
 char prf_str_0[] = "----";
 char prf_str_1[] = "t:----";
 static void PrintPrevProfBlock(uint8_t count) {
-    uint8_t i, j;
+    uint8_t i;
     /*
     uint16_t* block = profiler_previous_times;
     for (i = 0; i < profiler_previous_block_segment_count; i++) {

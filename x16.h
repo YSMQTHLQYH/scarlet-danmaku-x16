@@ -74,6 +74,26 @@ void IrqSetVector(void* func_pointer);
 // returns the IRQ function pointer (so we can extend the interrupt function instead of replacing it)
 void* IrqGetVector();
 
+
+
+//  ---- joystick
+typedef enum {
+    JOYSTICK_M0_RIGHT = (1 << 0),
+    JOYSTICK_M0_LEFT = (1 << 1),
+    JOYSTICK_M0_DOWN = (1 << 2),
+    JOYSTICK_M0_UP = (1 << 3),
+    JOYSTICK_M0_START = (1 << 4),
+    JOYSTICK_M0_SELECT = (1 << 5),
+    JOYSTICK_M0_Y = (1 << 6),
+    JOYSTICK_M0_B = (1 << 7),
+    JOYSTICK_M1_R = (1 << 4),
+    JOYSTICK_M1_L = (1 << 5),
+    JOYSTICK_M1_X = (1 << 6),
+    JOYSTICK_M1_A = (1 << 7),
+}_eJoystickMask;
+
+
+
 //  ---- vera
 #define SCANLINES_PER_FRAME 525
 #define SCANLINE_VSYNC      480
@@ -83,29 +103,38 @@ typedef struct {
     uint8_t MAPBASE;
     union { uint8_t TILEBASE; uint8_t BITMAPBASE; };
     uint8_t HSCROLL_L;
-    uint8_t HSCROLL_J;
+    union { uint8_t HSCROLL_H; uint8_t BITMAP_COLOR_OFFSET; };
     uint8_t VSCROLL_L;
     uint8_t VSCROLL_H;
 }_sVeraLayerReg;
 
 typedef enum {
-    INC_0,
-    INC_1,
-    INC_2,
-    INC_4,
-    INC_8,
-    INC_16,
-    INC_32,
-    INC_64,
-    INC_128,
-    INC_256,
-    INC_512,
-    INC_40,
-    INC_80,
-    INC_160,
-    INC_320,
-    INC_640,
+    ADDR_INC_0 = (0 << 4),
+    ADDR_INC_1 = (1 << 4),
+    ADDR_INC_2 = (2 << 4),
+    ADDR_INC_4 = (3 << 4),
+    ADDR_INC_8 = (4 << 4),
+    ADDR_INC_16 = (5 << 4),
+    ADDR_INC_32 = (6 << 4),
+    ADDR_INC_64 = (7 << 4),
+    ADDR_INC_128 = (8 << 4),
+    ADDR_INC_256 = (9 << 4),
+    ADDR_INC_512 = (10 << 4),
+    ADDR_INC_40 = (11 << 4),
+    ADDR_INC_80 = (12 << 4),
+    ADDR_INC_160 = (13 << 4),
+    ADDR_INC_320 = (14 << 4),
+    ADDR_INC_640 = (15 << 4),
 }_eVeraAddrInc;
+
+typedef enum {
+    COLOR_DEPTH_1BPP = 0,
+    COLOR_DEPTH_2BPP = 1,
+    COLOR_DEPTH_4BPP = 2,
+    COLOR_DEPTH_8BPP = 3,
+    COLOR_DEPTH_SPRITE_4BPP = (0 << 7),
+    COLOR_DEPTH_SPRITE_8BPP = (1 << 7),
+}_eVeraBitDepth;
 
 typedef struct
 {

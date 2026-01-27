@@ -1,5 +1,6 @@
 #include "math_tests.h"
 #include "x16.h"
+#include "zp_utils.h"
 
 //    ----macro schenanigans
 #define REPEAT1(a, i)   a(i)
@@ -16,19 +17,16 @@
 #define VERA_TEST_REPEAT(i)    w.u8_h = vera->DATA1;\
         w.u8_l = vera->DATA1;\
         w.u16 += (int8_t)vera->DATA1;\
-        vera->DATA0 = w.u16 + (int8_t)vera->DATA1;\
+        vera->DATA0 = w.u8_h + (int8_t)vera->DATA1;\
+        vera->DATA0 = w.u8_l;\
 // comment "w.u16 += (int8_t)vera->DATA1;\" line out for 8 bit second number
 
 //  ----
 
-#define TEST    4
+#define TEST    16
 #define TEST_SIZE   64
 uint16_t test_arr[TEST * TEST_SIZE] = { 0 };
 
-typedef union {
-    struct { uint8_t u8_l; uint8_t u8_h; };
-    uint16_t u16;
-} _uConv16;
 
 void MathTestsinit() {
     uint16_t i = 0;
@@ -59,13 +57,15 @@ void MathTestsinit() {
     }
 }
 
+static uint8_t aux = 0;
+
 void MathTest(_eMathTest t) {
     uint8_t i = 0, j = 0;
     _uConv16 w;
 
     // sets this up as a dummy target to write to
     vera->CTRL = 0;
-    vera->ADDRx_H = (INC_0 << 4);
+    vera->ADDRx_H = ADDR_INC_0;
 
     switch (t) {
     case MATH_TEST_NOTHING:
@@ -77,7 +77,8 @@ void MathTest(_eMathTest t) {
             for (i = 0; i < TEST_SIZE; i++) {
                 //vera->DATA0 = HIGH_RAM_16(i) + (int8_t)HIGH_RAM_8(i + 0x1000);
                 HIGH_RAM_16(i) += HIGH_RAM_16(i + 0x0800);
-                vera->DATA0 = HIGH_RAM_16(i);
+                vera->DATA0 = HIGH_RAM_8(i);
+                vera->DATA0 = HIGH_RAM_8(i + 1);
             }
         }
         break;
@@ -90,7 +91,8 @@ void MathTest(_eMathTest t) {
             while (HIGH_RAM_16(i) != 0) {
                 //vera->DATA0 = HIGH_RAM_16(i) + (int8_t)HIGH_RAM_8(i + 0x1000);
                 HIGH_RAM_16(i) += HIGH_RAM_16((i & 0x03FF) + 0x0800);
-                vera->DATA0 = HIGH_RAM_16(i);
+                vera->DATA0 = HIGH_RAM_8(i);
+                vera->DATA0 = HIGH_RAM_8(i + 1);
                 i++;
             }
         }
@@ -99,19 +101,21 @@ void MathTest(_eMathTest t) {
     case MATH_TEST_VERA_UNTIL0:
 
         vera->CTRL = 1;
-        vera->ADDRx_H = (INC_1 << 4);
+        vera->ADDRx_H = ADDR_INC_1;
 
         for (j = 0; j < TEST; j++) {
 
             vera->ADDRx_M = 0;
             vera->ADDRx_L = 0;
-            i = 0;
+            //i = 0;
 
             w.u8_h = vera->DATA1;
             while (w.u8_h != 0) {
                 w.u8_l = vera->DATA1;
                 w.u16 += (int8_t)vera->DATA1; // comment this line out for 8 bit second number
-                vera->DATA0 = w.u16 + (int8_t)vera->DATA1;
+                //vera->DATA0 = w.u16 + (int8_t)vera->DATA1; //also 16 bit version
+                vera->DATA0 = w.u8_h + (int8_t)vera->DATA1;
+                vera->DATA0 = w.u8_l;
                 w.u8_h = vera->DATA1;
                 //i++;
             }
@@ -122,7 +126,7 @@ void MathTest(_eMathTest t) {
         // nvm the other function was wrong, this is slightly faster
     case MATH_TEST_VERA_REPEAT_MACRO:
         vera->CTRL = 1;
-        vera->ADDRx_H = (INC_1 << 4);
+        vera->ADDRx_H = ADDR_INC_1;
 
         for (j = 0; j < TEST; j++) {
             vera->ADDRx_M = 0;
@@ -134,21 +138,53 @@ void MathTest(_eMathTest t) {
 
         break;
 
+        // same as MATH_TEST_VERA_UNTIL0 but translated to assembly
+        // lMFAO this is ~7 times faster, cc65 you kinda dumb
+    case MATH_TEST_VERA_UNTIL0_ASM:
+        //vera->CTRL = 1;
+        asm("lda #$1");
+        asm("sta $9F25");
+        //vera->ADDRx_H = (INC_1 << 4);
+        asm("lda #$10");
+        asm("sta $9F22");
+
+        //for (j = 0; j < TEST; j++) {
+        asm("ldy #%b", TEST);
+        asm("sty %v", aux);
+    vera_u0_asm_big_loop: //this label name is kinda shit but whatever, has to be specific for which case in the switch (in theory)
+
+
+        asm("ldx #0"); // X = 0;
+        asm("stx $9F21"); //vera->ADDRx_M = 0;
+        asm("stx $9F20"); //vera->ADDRx_L = 0;
+
+
+        asm("ldx $9F24"); // (w.u8_h): X = vera->DATA1;
+    vera_u0_asm_little_loop: // checked at the end first statement is repeated line above
+        asm("lda $9F24"); // (w.u8_l): A = vera->DATA1;
+        //w.u16 += (vera->DATA1 << 8) + vera->DATA1 ; 
+        // 16 bit add
+        asm("clc"); // clear carry
+        asm("adc $9F24"); // A += vera->DATA1;
+        asm("tay"); // Y = (w.u8_l): A 
+        asm("txa"); // A = (w.u8_h): X 
+        asm("adc $9F24"); // A += vera->DATA1;
+        // write w.u16 to vera->DATA0
+        asm("sty $9F23"); // vera->DATA0 = A (w.u8_h)
+        asm("sty $9F23"); // vera->DATA0 = Y (w.u8_l)
+
+        // check for equivalen of while (w.u8_h != 0) 
+        asm("ldx $9F24"); // (w.u8_h): X = vera->DATA1;
+        asm("bne %g", vera_u0_asm_little_loop); // if Z == 0 (x != 0)
+
+
+        asm("dec %v", aux);
+        asm("bne %g", vera_u0_asm_big_loop);
+        //}
+        break;
+
+
     case MATH_TEST_WASTE_TIME:
-        for (i = 0; i < 0x10; i++) {
-            for (j = 0; j < 0xA0; j++) {
-                asm("nop");
-            }
-        }
-        break;
-    case MATH_TEST_WASTE_MORE_TIME:
-        for (i = 0; i < 0x20; i++) {
-            for (j = 0; j < 0xA0; j++) {
-                asm("nop");
-            }
-        }
-        break;
-    case MATH_TEST_WASTE_EVEN_MORE_TIME:
         for (i = 0; i < 0x80; i++) {
             for (j = 0; j < 0xFF; j++) {
                 asm("nop");
