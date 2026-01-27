@@ -1,5 +1,6 @@
 #include "text.h"
 #include "x16.h"
+#include "bitmap_layer.h"
 
 
 
@@ -28,7 +29,7 @@ uint8_t HijackRomCharset(uint8_t charset, uint8_t font_bpp, uint8_t color) {
     // DATA0 for writting our font
     vera->CTRL = 0;
     vera->ADDRx_H = 0x10; // inc = 1, page = 0
-    vera->ADDRx_M = (font_bpp == 4) ? FONT_4BPP_START : FONT_2BPP_START;
+    vera->ADDRx_M = (font_bpp == 4) ? FONT_4BPP_START_M : FONT_2BPP_START_M;
     vera->ADDRx_L = 0;
 
     c = (font_bpp == 4) ? (color & 0x0F) : (color & 0x03);
@@ -130,7 +131,7 @@ uint8_t PrintSpriteStr(char* str, uint8_t str_slot, uint16_t x, uint16_t y, uint
 
                 // attr byte 0: addr_l (bits 12-5)
                 // attr byte 1: addr_h (bits 16-3) (and mode but we want 0 (4bpp) anyways)
-                w.u16 = (FONT_4BPP_START << 3); // FONT_4BPP_START is bits 15-7, // bit 16 is always 0 anyways
+                w.u16 = (FONT_4BPP_START_M << 3); // FONT_4BPP_START is bits 15-7, // bit 16 is always 0 anyways
                 w.u16 += next_char; // increasing addr_l by 1 already increases index by 32 bytes (size of one tile)
                 vera->DATA0 = w.u8_l;
                 vera->DATA0 = w.u8_h;
@@ -196,7 +197,123 @@ void FreeSpriteStr(uint8_t str_slot) {
 }
 
 
-//  ---- Conversions to str
+//  ----  Bitmap text
+#define TEXT_BITMAP_MAX_LENGHT  32
+
+/*
+    uses VeraFX to copy from VRAM multiple bytes at once
+
+    each 2bpp 8x8 char in the font is 16 bytes total, pixels are stored contiguously left to right, top to bottom
+    such that B0-B15 is byte number and every '-' is a pixel
+    |B0 ----|B1 ----|
+    |B2 ----|B3 ----|
+    |B4 ----|B5 ----|
+    |B6 ----|B7 ----|
+    |B8 ----|B9 ----|
+    |B10----|B11----|
+    |B12----|B13----|
+    |B14----|B15----|
+
+    each line of bitmap is 320 pixels, at 2bpp that means 80 bytes per line
+    while there isn't an easy way to write them in order, setting ADDRx_INC to 80 means we can easly write
+    0->2->4->6->8->12->14 in a row without touching ADDRx ourselves, (same applies for the odd numbered bytes)
+
+    we just have to read the bytes from the font while skipping ever other byte,
+    which we can easily do with ADDRx_INC = 2
+
+    we just have to read from one ADDR and immediately write it into the other ADDR
+    repeat that 8 times, move the addresses a bit and then do *that* again 8 times
+*/
+#define BITMAP_PAGE bitmap_front_buffer
+void Print2BppBitmapStr(char* str, uint8_t x, uint8_t y) {
+    _uConv16 font_addr, pixel_addr;
+    uint8_t i;
+    char next_char;
+
+
+    // ---- ADDRx_H and ADDRx_INC doesn't change during entire function so we can set them at the start once
+    // -- vera->DATA0 for reading the characters
+    // selects ADDR0
+    vera->CTRL = 0;
+    vera->ADDRx_H = ADDR_INC_2 | FONT_VRAM_PAGE;
+    // -- vera->DATA1 for writting the characters into bitmap
+    vera->CTRL = 1;
+    vera->ADDRx_H = ADDR_INC_80 | BITMAP_PAGE;
+
+    for (i = 0; i < TEXT_BITMAP_MAX_LENGHT; i++) {
+        next_char = str[i];
+        if (next_char == 0)break; // if this happens we have reached the end of the string
+        //  ----  Blit one character
+
+        // get address of char in font
+        font_addr.u16 = (next_char << 4);
+        font_addr.u8_h += FONT_2BPP_START_M;
+        // get address of target starting pixel
+        pixel_addr.u16 = lookup_bitmap_y[y];
+        pixel_addr.u16 += x + i + i;
+
+        // setup for even-byte pass
+        vera->CTRL = 0;
+        vera->ADDRx_M = font_addr.u8_h;
+        vera->ADDRx_L = font_addr.u8_l;
+        vera->CTRL = 1;
+        vera->ADDRx_M = pixel_addr.u8_h;
+        vera->ADDRx_L = pixel_addr.u8_l;
+
+        // setup carry flag as boolean variable
+        // set = even pass, clear = odd pass
+        asm("sec");
+    copy_paste_x8:
+        asm("lda $9F23"); // A = vera->DATA0
+        asm("nop");
+        asm("sta $9F24"); // vera->DATA1 = A
+        asm("lda $9F23");
+        asm("nop");
+        asm("sta $9F24");
+        //2
+        asm("lda $9F23");
+        asm("nop");
+        asm("sta $9F24");
+        asm("lda $9F23");
+        asm("nop");
+        asm("sta $9F24");
+        //4
+        asm("lda $9F23");
+        asm("nop");
+        asm("sta $9F24");
+        asm("lda $9F23");
+        asm("nop");
+        asm("sta $9F24");
+        //6
+        asm("lda $9F23");
+        asm("nop");
+        asm("sta $9F24");
+        asm("lda $9F23");
+        asm("nop");
+        asm("sta $9F24");
+
+        //8
+        asm("bcs %g", odd_pass); // if(odd_pass)continue;
+        continue;
+    odd_pass:
+        // setup for odd-byte pass
+        font_addr.u16++;
+        pixel_addr.u16++;
+        vera->CTRL = 0;
+        vera->ADDRx_M = font_addr.u8_h;
+        vera->ADDRx_L = font_addr.u8_l;
+        vera->CTRL = 1;
+        vera->ADDRx_M = pixel_addr.u8_h;
+        vera->ADDRx_L = pixel_addr.u8_l;
+        asm("clc"); //odd_pass = true
+        goto copy_paste_x8;
+
+    }
+
+
+}
+
+//  ----  Conversions to str
 
 void StrUint8Dec(uint8_t u, char* c) {
     uint8_t b = 0, a = u;

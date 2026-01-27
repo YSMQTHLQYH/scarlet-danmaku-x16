@@ -23,7 +23,7 @@ void test_sprite() {
     vera->ADDRx_H = 0x11;
     vera->ADDRx_M = VERA_REG_SPRITE_ATTR_M;
     vera->ADDRx_L = 0;
-    c = (FONT_4BPP_START) << 3;
+    c = (FONT_4BPP_START_M) << 3;
     c += 0xE9;
     vera->DATA0 = (uint8_t)c; // addr 12-5
     vera->DATA0 = (uint8_t)(c >> 8); // addr 16-13
@@ -122,6 +122,7 @@ void main() {
         ProfilerEndSegment();
 
         test_sprite();
+        Print2BppBitmapStr("test", 10, 20);
         ProfilerEndSegment();
 
         MathTest(test_number);
@@ -161,6 +162,7 @@ static void Init() {
 
     //  ---- text
     s = HijackRomCharset(12, 4, 2);
+    s += HijackRomCharset(12, 2, 3);
     KernalScreenSetCharset(3);
     if (s == 0) {
         printf("Hijacked KERNAL font successfully\n");

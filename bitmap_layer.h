@@ -11,11 +11,15 @@ conviniently we have frame buffer 0 on VRAM page 0 and frame buffer 1 on VRAM pa
 #define BITMAP_WIDTH    320
 #define BITMAP_HEIGHT   240
 //#define BITMAP_BPP      2 // I don't think there's much use for this
+#define BITMAP_PIXELS_PER_BYTE  4 // inverse of BITMAP_BPP I guess
 
 //#define BITMAP_ADDR_START_M   0x0000
 #define BITMAP_ADDR_START_M   0x00
 //#define BITMAP_ADDR_END     0x4AFF
 #define BITMAP_ADDR_END_M     0x4A
+
+
+extern uint16_t lookup_bitmap_y[BITMAP_HEIGHT];
 
 // buffer currently being displayed (should NOT be written to)
 extern uint8_t bitmap_front_buffer;

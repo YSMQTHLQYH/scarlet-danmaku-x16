@@ -8,8 +8,9 @@
 #define TEXT_MAX_SPRITES        0x20
 
 // all on page 0
-#define FONT_2BPP_START 0xD0// starts at 0:D000
-#define FONT_4BPP_START 0xE0// starts at 0:E000
+#define FONT_VRAM_PAGE  0
+#define FONT_2BPP_START_M 0xD0// starts at 0:D000
+#define FONT_4BPP_START_M 0xE0// starts at 0:E000
 
 
 // loads KERNAL's monocrome font and makes a 2/4bpp copy of it for bitmap graphics / sprites
@@ -24,6 +25,9 @@ uint8_t PrintSpriteStr(char* str, uint8_t str_slot, uint16_t x, uint16_t y, uint
 void FreeSpriteStr(uint8_t str_slot);
 
 
+// blits text into the bitmap layer 1, does not keep track of the text in any way
+// position in the x-axis is x*4
+void Print2BppBitmapStr(char* str, uint8_t x, uint8_t y);
 
 //  ---- Conversions to str
 

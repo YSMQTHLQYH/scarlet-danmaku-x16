@@ -4,7 +4,17 @@
 uint8_t bitmap_front_buffer = 0;
 uint8_t bitmap_back_buffer = 0;
 
+uint16_t lookup_bitmap_y[BITMAP_HEIGHT] = { 0 };
+void CalculateYLookup() {
+    uint8_t i;
+    uint16_t y = 0;
+    for (i = 0; i < BITMAP_HEIGHT; i++) {
+        lookup_bitmap_y[i] = y;
+        y += BITMAP_WIDTH / BITMAP_PIXELS_PER_BYTE;
+    }
+}
 void BitmapInit(uint8_t start_frame_buffer) {
+    CalculateYLookup();
     bitmap_front_buffer = 0;
     bitmap_back_buffer = 1;
     if (start_frame_buffer) {

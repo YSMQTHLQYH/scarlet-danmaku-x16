@@ -109,6 +109,17 @@ typedef struct {
 }_sVeraLayerReg;
 
 typedef enum {
+    DCSEL_0 = (0 << 1), // video modes
+    DCSEL_1 = (1 << 1), // HV scale
+    DCSEL_2 = (2 << 1), // FX config
+    DCSEL_3 = (3 << 1), // FX line
+    DCSEL_4 = (4 << 1), // FX poly
+    DCSEL_5 = (5 << 1), // FX poly fill
+    DCSEL_6 = (6 << 1), // FX cache
+    DCSEL_VERSION = (63 << 1), // version number
+}_eVeraDCSel;
+
+typedef enum {
     ADDR_INC_0 = (0 << 4),
     ADDR_INC_1 = (1 << 4),
     ADDR_INC_2 = (2 << 4),
@@ -151,6 +162,7 @@ typedef struct
     union {
         struct { uint8_t VIDEO; uint8_t HSCALE; uint8_t VSCALE; uint8_t BORDER; } DC0;
         struct { uint8_t HSTART; uint8_t HSTOP; uint8_t VSTART; uint8_t VSTOP; } DC1;
+        struct { uint8_t FX_CTRL; uint8_t FX_TILEBASE; uint8_t FX_MAPBASE; uint8_t FX_MULT; } DC2;
     };
 
     _sVeraLayerReg LAYER0;
