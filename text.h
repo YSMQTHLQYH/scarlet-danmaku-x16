@@ -17,7 +17,7 @@
 // returns 0 on success, 1 on failure
 uint8_t HijackRomCharset(uint8_t charset, uint8_t font_bpp, uint8_t color);
 
-
+// a worse version of bitmap str but is about 4 times faster
 // str_slot is "slot" string is written to, set it to 0 to write to any free slot, set to anything else to replace that str
 // returns str_slot of text written, 0 if there wasn't any free slots
 uint8_t PrintSpriteStr(char* str, uint8_t str_slot, uint16_t x, uint16_t y, uint8_t palette);
@@ -27,7 +27,7 @@ void FreeSpriteStr(uint8_t str_slot);
 
 // blits text into the bitmap layer 1, does not keep track of the text in any way
 // position in the x-axis is x*4
-void Print2BppBitmapStr(char* str, uint8_t x, uint8_t y);
+void Print2BppBitmapStr(char* str, uint8_t buffer_n, uint8_t x, uint8_t y);
 
 //  ---- Conversions to str
 

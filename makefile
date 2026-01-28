@@ -1,7 +1,7 @@
 CC=cl65
 
 make:
-	$(CC) -O -o out\CH1.PRG -t cx16 main.c x16.c zp_utils.c math_tests.c zsm_player.c text.c profiler.c bitmap_layer.c
+	$(CC) -O -o out\CH1.PRG -t cx16 main.c x16.c zp_utils.c math_tests.c zsm_player.c text.c profiler.c bitmap_layer.c input_action.c
 
 .PHONY: run
 run:

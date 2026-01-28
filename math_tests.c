@@ -26,7 +26,7 @@
 #define TEST    16
 #define TEST_SIZE   64
 uint16_t test_arr[TEST * TEST_SIZE] = { 0 };
-
+#define TEST_ADDR_M 0x4B
 
 void MathTestsinit() {
     uint16_t i = 0;
@@ -38,7 +38,7 @@ void MathTestsinit() {
     //set test table in VRAM
     vera->CTRL = 0;
     vera->ADDRx_H = 0x10;
-    vera->ADDRx_M = 0;
+    vera->ADDRx_M = TEST_ADDR_M;
     vera->ADDRx_L = 0;
 
     for (h = 0; h < TEST_SIZE; h++) {
@@ -105,7 +105,7 @@ void MathTest(_eMathTest t) {
 
         for (j = 0; j < TEST; j++) {
 
-            vera->ADDRx_M = 0;
+            vera->ADDRx_M = TEST_ADDR_M;
             vera->ADDRx_L = 0;
             //i = 0;
 
@@ -129,7 +129,7 @@ void MathTest(_eMathTest t) {
         vera->ADDRx_H = ADDR_INC_1;
 
         for (j = 0; j < TEST; j++) {
-            vera->ADDRx_M = 0;
+            vera->ADDRx_M = TEST_ADDR_M;
             vera->ADDRx_L = 0;
 
             REPEAT_N(64, VERA_TEST_REPEAT)
@@ -154,9 +154,10 @@ void MathTest(_eMathTest t) {
     vera_u0_asm_big_loop: //this label name is kinda shit but whatever, has to be specific for which case in the switch (in theory)
 
 
-        asm("ldx #0"); // X = 0;
-        asm("stx $9F21"); //vera->ADDRx_M = 0;
-        asm("stx $9F20"); //vera->ADDRx_L = 0;
+        asm("lda #%b", TEST_ADDR_M); // A = TEST_ADDR_M
+        asm("sta $9F21"); //vera->ADDRx_M = TEST_ADDR_M;
+        asm("eor #%b", TEST_ADDR_M); // A ^= TEST_ADDR_M; //(XOR A with itself, A = 0)
+        asm("sta $9F20"); //vera->ADDRx_L = 0;
 
 
         asm("ldx $9F24"); // (w.u8_h): X = vera->DATA1;

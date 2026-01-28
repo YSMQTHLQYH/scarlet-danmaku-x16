@@ -82,6 +82,19 @@ void KernalScreenSetCharset(uint8_t charset) {
     asm("jsr %w", KERNAL_SCREEN_SET_CHARSET);
 }
 
+uint8_t KernalJoystickGet(uint8_t joystick_n, uint8_t* mask_0, uint8_t* mask_1) {
+    a0 = joystick_n;
+    asm("lda %v", a0);
+    asm("jsr %w", KERNAL_JOYSTICK_GET);
+    asm("sta %v", a0); // byte_0 
+    asm("stx %v", a1); // byte_1
+    asm("sty %v", a2); // joystick_present
+    if (a2) { *mask_0 = 0xFF; *mask_1 = 0xFF; return 1; } // joystick NOT present
+    // joystick present
+    *mask_0 = a0;
+    *mask_1 = a1;
+    return 0;
+}
 //  ---- files
 
 

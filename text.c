@@ -124,7 +124,7 @@ uint8_t PrintSpriteStr(char* str, uint8_t str_slot, uint16_t x, uint16_t y, uint
 
                 // draw the thing
                 w.u16 = ((uint16_t)(VERA_REG_SPRITE_ATTR_M) << 8);
-                w.u16 += TEXT_SPRITE_INDEX_START;
+                w.u16 += ((uint16_t)TEXT_SPRITE_INDEX_START << 3);
                 w.u16 += (i << 3); // sprite attr is 8 bytes per sprite
                 vera->ADDRx_M = w.u8_h;
                 vera->ADDRx_L = w.u8_l;
@@ -159,6 +159,7 @@ uint8_t PrintSpriteStr(char* str, uint8_t str_slot, uint16_t x, uint16_t y, uint
             if (sprite_dibs[i] == slot) {
                 // delete sprite
                 w.u16 = ((uint16_t)(VERA_REG_SPRITE_ATTR_M) << 8);
+                w.u16 += ((uint16_t)TEXT_SPRITE_INDEX_START << 3);
                 w.u16 += (i << 3); // sprite attr is 8 bytes per sprite
                 w.u16 += 6; // we turn sprite off by just setting z to 0, which is in byte 6
                 vera->ADDRx_M = w.u8_h;
@@ -224,8 +225,7 @@ void FreeSpriteStr(uint8_t str_slot) {
     we just have to read from one ADDR and immediately write it into the other ADDR
     repeat that 8 times, move the addresses a bit and then do *that* again 8 times
 */
-#define BITMAP_PAGE bitmap_front_buffer
-void Print2BppBitmapStr(char* str, uint8_t x, uint8_t y) {
+void Print2BppBitmapStr(char* str, uint8_t buffer_n, uint8_t x, uint8_t y) {
     _uConv16 font_addr, pixel_addr;
     uint8_t i;
     char next_char;
@@ -238,7 +238,7 @@ void Print2BppBitmapStr(char* str, uint8_t x, uint8_t y) {
     vera->ADDRx_H = ADDR_INC_2 | FONT_VRAM_PAGE;
     // -- vera->DATA1 for writting the characters into bitmap
     vera->CTRL = 1;
-    vera->ADDRx_H = ADDR_INC_80 | BITMAP_PAGE;
+    vera->ADDRx_H = ADDR_INC_80 | buffer_n;
 
     for (i = 0; i < TEXT_BITMAP_MAX_LENGHT; i++) {
         next_char = str[i];

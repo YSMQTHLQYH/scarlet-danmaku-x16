@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "x16.h"
 #include "zp_utils.h"
+#include "input_action.h"
 #include "zsm_player.h"
 #include "text.h"
 #include "bitmap_layer.h"
@@ -38,6 +39,8 @@ void test_sprite() {
 
 static void Init();
 static void PrintPrevProfBlock();
+static void PrintProfilerBitmapFrame(uint8_t buffer_n);
+
 
 
 char test_song_file_name_1[] = "test assets/greenmotor.zsm";
@@ -47,7 +50,8 @@ char test_song_file_name_2[] = "test assets/splashwave.zsm";
 char test_song_file_name_3[] = "test assets/all ur base.zsm";
 #define SONG_NAME_3_LENGTH    12 + 15
 
-char str_lag_count[] = "lag--,----";
+char str_lag[] = "--";
+char str_wait_count[] = "----";
 
 uint8_t last_tick = 0, current_tick = 0;
 void main() {
@@ -117,23 +121,36 @@ void main() {
     //  --- main loop
     while (1) {
         ProfilerBeginBlock();
-        //Update();
+
+        // segment 0: music
         ZsmTick();
         ProfilerEndSegment();
 
-        test_sprite();
-        Print2BppBitmapStr("test", 10, 20);
+        // segment 1: input
+        HandleInputActions();
         ProfilerEndSegment();
 
+        // segment 2: placeholder dummy
+        JoystickDrawToBitmap(0, bitmap_front_buffer, 50, 10);
+        JoystickDrawToBitmap(1, bitmap_front_buffer, 60, 10);
+        ProfilerEndSegment();
+
+        // segment 3: placeholder dummy
+        ProfilerEndSegment();
+        test_sprite();
+
+        // segment 4: math
         MathTest(test_number);
         ProfilerEndSegment();
 
-        StrUint8Hex(lag_count, &str_lag_count[3]);
-        StrUint16Hex(wait_count, &str_lag_count[6]);
-        PrintSpriteStr(str_lag_count, 1, 216, 216, 0);
+        // segment 5: profiler print
+        StrUint8Hex(lag_count, str_lag);
+        StrUint16Hex(wait_count, str_wait_count);
+        PrintSpriteStr(str_lag, 1, 288, 202, 0);
+        PrintSpriteStr(str_wait_count, 2, 272, 210, 0);
 
-        PrintPrevProfBlock(ProfilerEndBlock());
-
+        PrintPrevProfBlock();
+        ProfilerEndBlock();
 
 
         //snprintf(debug_buffer, 64, "lag: %i spare: %i        \n", lag_count, wait_count);
@@ -170,6 +187,8 @@ static void Init() {
         printf("Failed to hijack KERNAL font\n");
     }
 
+    InputActionInit(0);
+
     //  ---- graphics
     vera->CTRL = 0x00;
     vera->DC0.VIDEO = 0x61;
@@ -177,66 +196,55 @@ static void Init() {
     vera->DC0.VSCALE = 64;
 
     BitmapInit(0);
+    PrintProfilerBitmapFrame(0);
 }
 
-char prf_str_0[] = "----";
-char prf_str_1[] = "t:----";
-static void PrintPrevProfBlock(uint8_t count) {
-    uint8_t i;
-    /*
-    uint16_t* block = profiler_previous_times;
-    for (i = 0; i < profiler_previous_block_segment_count; i++) {
-        prf_str_0[0] = i + '0';
-        StrUint16Hex(block[i], &prf_str_0[0]);
-        PrintSpriteStr(prf_str_0, 0, 248, 170 + (i << 3), 0);
-    }
-    StrUint16Hex(profiler_previous_block_total_time, &prf_str_1[2]);
-    PrintSpriteStr(prf_str_1, 0, 232, 170 + (i << 3), 0);
-    */
-
-    for (i = 0; i < count; i++) {
-        prf_str_0[0] = i + '0';
-        StrUint16Hex(profiler_segment[i], &prf_str_0[0]);
-        PrintSpriteStr(prf_str_0, i + 2, 248, 170 + (i << 3), 0);
-
-    }
-}
-/*
-void Update() {
-    uint8_t c = 0;
-    uint16_t i = 0, j = 0;
-    uint8_t v = 0;
-
-
-
-    v = vera->DC0.VIDEO;
-    v |= 0x10;
-    //v &= ~0x20;
-    vera->CTRL = 0x00;
-    vera->DC0.VIDEO = v;
-
-    vera->LAYER0.CONFIG = 0x06;
-    vera->LAYER0.BITMAPBASE = 0x80;
-
-
-
-    vera->CTRL = 0x00;
-    vera->ADDRx_H = 0x11;
-    vera->ADDRx_M = 0x00;
-    vera->ADDRx_L = 0x00;
-    vera->DC0.HSCALE = 64;
-    vera->DC0.VSCALE = 64;
-    for (i = 0; i < 160; i++) {
-        c = i & 0x0F;
-        for (j = 0; j < 80; j++) {
-            vera->DATA0 = c + (c << 4);//(uint8_t)(j % 16 + (c << 4));
-
+char prf_str[] = "----";
+static void PrintPrevProfBlock() {
+    uint8_t i, x, a;
+    _uConv16 t;
+    for (i = 0; i < profiler_previous_segment_count; i++) {
+        t.u16 = profiler_segment_previous[i];
+        if (t.u8_h == 0) {
+            // skips the top two digits if they are 0
+            a = 2;
+            x = 16;
+        } else {
+            a = 0;
+            x = 0;
         }
+        StrUint16Hex(t.u16, &prf_str[0]);
+        PrintSpriteStr(&prf_str[a], i + 3, 272 + x, 100 + (i << 3), 0);
+        //Print2BppBitmapStr(prf_str, bitmap_front_buffer, 62, 170 + (i << 3));
     }
-
+    // total
+    StrUint16Hex(profiler_previous_total, prf_str);
+    PrintSpriteStr(prf_str, i + 3, 272, 104 + (i << 3), 0);
 
 }
-*/
 
+#define SEGMENT_COUNT   6
+char* prf_frame_str[] = {
+    "music:",
+    "input:",
+    "seg 2:",
+    "seg 3:",
+    "math :",
+    "text :",
+};
 
+static void PrintProfilerBitmapFrame(uint8_t buffer_n) {
+    uint8_t i;
+    Print2BppBitmapStr("profiler time", buffer_n, 52, 80);
+    Print2BppBitmapStr("(scanlines)", buffer_n, 54, 88);
+
+    for (i = 0; i < SEGMENT_COUNT; i++) {
+        Print2BppBitmapStr(prf_frame_str[i], buffer_n, 56, 100 + (i << 3));
+    }
+    Print2BppBitmapStr("total:", buffer_n, 56, 104 + (i << 3));
+    Print2BppBitmapStr("1 frame=020d", buffer_n, 52, 112 + (i << 3));
+
+    Print2BppBitmapStr("lag frame:", buffer_n, 48, 202);
+    Print2BppBitmapStr("spare cpu:", buffer_n, 48, 210);
+}
 

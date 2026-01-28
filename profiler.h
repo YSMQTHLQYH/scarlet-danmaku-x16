@@ -6,7 +6,9 @@
 #include <stdint.h>
 
 #define PROFILER_MAX_SEGMENTS   8
-extern uint16_t profiler_segment[PROFILER_MAX_SEGMENTS];
+extern uint16_t profiler_segment_previous[PROFILER_MAX_SEGMENTS];
+extern uint16_t profiler_previous_total;
+extern uint8_t profiler_previous_segment_count;
 
 // gets timestamp in scanlines since +-program startup
 uint16_t ProfilerGetTimestamp();
@@ -14,6 +16,6 @@ uint16_t ProfilerGetTimestamp();
 
 void ProfilerBeginBlock();
 void ProfilerEndSegment();
-uint8_t ProfilerEndBlock();
+void ProfilerEndBlock();
 
 #endif

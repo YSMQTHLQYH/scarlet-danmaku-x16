@@ -12,11 +12,16 @@
 #define KERNAL_SETLFS   0xFFBA
 #define KERNAL_LOAD     0xFFD5
 
+#define KERNAL_JOYSTICK_GET 0xFF56
+
 #define KERNAL_SCREEN_SET_CHARSET   0xFF62
 
 // ---- KERNAL functions
 uint8_t KernalReadTimer();
 void KernalScreenSetCharset(uint8_t charset);
+// returns 0 if joystick is present, 1 if not
+// mask_0/1 are the buttons pressed, bAND them with _eJoystickMask
+uint8_t KernalJoystickGet(uint8_t joystick_n, uint8_t* mask_0, uint8_t* mask_1);
 
 typedef enum {
     FILE_LOAD_IGNORE_HEADER = 0,

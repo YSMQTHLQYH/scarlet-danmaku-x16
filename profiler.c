@@ -9,9 +9,13 @@ extern volatile uint8_t profiler_vsync_queue;
 
 uint16_t scanlines_from_frame_count = 0;
 
-uint16_t profiler_segment[PROFILER_MAX_SEGMENTS] = { 0 };
+static uint16_t profiler_segment[PROFILER_MAX_SEGMENTS] = { 0 };
 static uint16_t last_time = 0;
 static uint8_t current_segment = 0;
+
+uint16_t profiler_segment_previous[PROFILER_MAX_SEGMENTS] = { 0 };
+uint16_t profiler_previous_total = 0;
+uint8_t profiler_previous_segment_count = 0;
 
 uint16_t ProfilerGetTimestamp() {
     uint16_t current_scanline = VeraGetScanline();
@@ -36,22 +40,28 @@ void ProfilerBeginBlock() {
 }
 void ProfilerEndSegment() {
     uint16_t t = ProfilerGetTimestamp();
-
-    if (t - last_time > 0x4FFF) {
+    /*
+    if (t - last_time > 0x7FFF) {
         while (1) {
             EMU_DEBUG_1(t);
             EMU_DEBUG_2(last_time);
         }
     }
-
+    */
     profiler_segment[current_segment++] = t - last_time;
     last_time = t;
 }
-uint8_t ProfilerEndBlock() {
+void ProfilerEndBlock() {
+    uint8_t i;
     uint16_t t = ProfilerGetTimestamp();
     profiler_segment[current_segment++] = t - last_time;
     //last_time = t;
-    return current_segment;
+    profiler_previous_total = 0;
+    for (i = 0; i < PROFILER_MAX_SEGMENTS; i++) {
+        profiler_segment_previous[i] = profiler_segment[i];
+        profiler_previous_total += profiler_segment[i];
+    }
+    profiler_previous_segment_count = current_segment;
 }
 
 
