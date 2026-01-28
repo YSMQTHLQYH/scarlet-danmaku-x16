@@ -29,12 +29,14 @@ void InputActionInit(uint8_t joystick_n) {
 	action[ACTION_LEFT].keybind_mask_0 = JOYSTICK_M0_LEFT;
 	action[ACTION_RIGHT].keybind_mask_0 = JOYSTICK_M0_RIGHT;
 	action[ACTION_START].keybind_mask_0 = JOYSTICK_M0_START;
+	action[ACTION_DEBUG].keybind_mask_0 = JOYSTICK_M0_SELECT;
 
 	for (i = 0; i < ACTION_ID_COUNT; i++) {
 		action[i].joystick_mapped = joystick_n;
 	}
 }
 
+// TODO: optimeze this
 void HandleInputActions() {
 	//const uint8_t* key_states = SDL_GetKeyboardState(NULL);
 	uint8_t i, btn_pressed_0, btn_pressed_1, last, joystick_n;
@@ -64,8 +66,9 @@ uint8_t IsActionJustPressed(_eInputActionId id) {
 
 // ---- draw pressed buttons on bitmap layer
 
-#define COLOR_PRESSED		3
+#define COLOR_PRESSED		1
 #define COLOR_NOT_PRESSED	2
+#define COLOR_JUST_PRESSED	3
 #define FILL_FULL(a)	(a << 6) | (a << 4) | (a << 2) | a
 #define FILL_HALF(a)	(a << 4) | (a << 2)
 #define FILL_IF_PRESSED_FULL(cond, col)	if (cond) { col = FILL_FULL(COLOR_PRESSED); } else { col = FILL_FULL(COLOR_NOT_PRESSED); }
@@ -102,7 +105,7 @@ void JoystickDrawToBitmap(uint8_t joystick_n, uint8_t buffer_n, uint8_t x, uint8
 	// setup vera
 	vera->CTRL = 0;
 	vera->ADDRx_H = buffer_n | ADDR_INC_1;
-	addr.u8_h = BITMAP_ADDR_START_M;
+	addr.u8_h = MEM_BITMAP_1_ADDR_M;
 	addr.u8_l = x;
 	addr.u16 += lookup_bitmap_y[y];
 
@@ -189,4 +192,33 @@ void JoystickDrawToBitmap(uint8_t joystick_n, uint8_t buffer_n, uint8_t x, uint8
 	vera->ADDRx_L = addr.u8_l;
 	vera->DATA0 = c[11];
 	vera->DATA0 = c[10];
+}
+
+void InputActionDrawToBitmap(uint8_t buffer_n, uint8_t x, uint8_t y) {
+	uint8_t i, c;
+	_uConv16 addr;
+	// setup vera
+	vera->CTRL = 0;
+	vera->ADDRx_H = buffer_n | ADDR_INC_80;
+	addr.u8_h = MEM_BITMAP_1_ADDR_M;
+	addr.u8_l = x;
+	addr.u16 += lookup_bitmap_y[y];
+
+	for (i = 0; i < ACTION_ID_COUNT; i++) {
+		// read input
+		if (IsActionJustPressed(i)) {
+			c = FILL_FULL(COLOR_JUST_PRESSED);
+		} else {
+			FILL_IF_PRESSED_FULL(IsActionPressed(i), c);
+		}
+		// draw
+		vera->ADDRx_M = addr.u8_h;
+		vera->ADDRx_L = addr.u8_l;
+		vera->DATA0 = c;
+		vera->DATA0 = c;
+		vera->DATA0 = c;
+		vera->DATA0 = c;
+		addr.u16 += 2;
+	}
+
 }

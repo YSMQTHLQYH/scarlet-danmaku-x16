@@ -1,5 +1,6 @@
 #include "text.h"
 #include "x16.h"
+#include "memory_map.h"
 #include "bitmap_layer.h"
 
 
@@ -10,7 +11,7 @@ typedef union {
 } _uConv16;
 
 // from 0x1F000 to 0x1F7FF
-#define KERNAL_FONT_VRAM_ADDR   0xF0
+//#define MEM_VRAM_1_KERNAL_FONT_ADDR_M   0xF0
 
 uint8_t HijackRomCharset(uint8_t charset, uint8_t font_bpp, uint8_t color) {
     uint16_t i;
@@ -23,13 +24,13 @@ uint8_t HijackRomCharset(uint8_t charset, uint8_t font_bpp, uint8_t color) {
     // DATA1 for reading KERNAL font
     vera->CTRL = 1;
     vera->ADDRx_H = 0x11; // inc = 1, page = 1
-    vera->ADDRx_M = KERNAL_FONT_VRAM_ADDR;
+    vera->ADDRx_M = MEM_VRAM_1_KERNAL_FONT_ADDR_M;
     vera->ADDRx_L = 0;
 
     // DATA0 for writting our font
     vera->CTRL = 0;
     vera->ADDRx_H = 0x10; // inc = 1, page = 0
-    vera->ADDRx_M = (font_bpp == 4) ? FONT_4BPP_START_M : FONT_2BPP_START_M;
+    vera->ADDRx_M = (font_bpp == 4) ? MEM_4BPP_FONT_1_ADDR_M : MEM_2BPP_FONT_1_ADDR_M;
     vera->ADDRx_L = 0;
 
     c = (font_bpp == 4) ? (color & 0x0F) : (color & 0x03);
@@ -123,7 +124,7 @@ uint8_t PrintSpriteStr(char* str, uint8_t str_slot, uint16_t x, uint16_t y, uint
                 sprite_dibs[i] = slot;
 
                 // draw the thing
-                w.u16 = ((uint16_t)(VERA_REG_SPRITE_ATTR_M) << 8);
+                w.u16 = ((uint16_t)(MEM_VRAM_1_VERA_SPRITE_ATTR_M) << 8);
                 w.u16 += ((uint16_t)TEXT_SPRITE_INDEX_START << 3);
                 w.u16 += (i << 3); // sprite attr is 8 bytes per sprite
                 vera->ADDRx_M = w.u8_h;
@@ -131,7 +132,7 @@ uint8_t PrintSpriteStr(char* str, uint8_t str_slot, uint16_t x, uint16_t y, uint
 
                 // attr byte 0: addr_l (bits 12-5)
                 // attr byte 1: addr_h (bits 16-3) (and mode but we want 0 (4bpp) anyways)
-                w.u16 = (FONT_4BPP_START_M << 3); // FONT_4BPP_START is bits 15-7, // bit 16 is always 0 anyways
+                w.u16 = (MEM_4BPP_FONT_1_ADDR_M << 3); // FONT_4BPP_START is bits 15-7, // bit 16 is always 0 anyways
                 w.u16 += next_char; // increasing addr_l by 1 already increases index by 32 bytes (size of one tile)
                 vera->DATA0 = w.u8_l;
                 vera->DATA0 = w.u8_h;
@@ -158,7 +159,7 @@ uint8_t PrintSpriteStr(char* str, uint8_t str_slot, uint16_t x, uint16_t y, uint
             // keep iterating to clear any now unused sprite
             if (sprite_dibs[i] == slot) {
                 // delete sprite
-                w.u16 = ((uint16_t)(VERA_REG_SPRITE_ATTR_M) << 8);
+                w.u16 = ((uint16_t)(MEM_VRAM_1_VERA_SPRITE_ATTR_M) << 8);
                 w.u16 += ((uint16_t)TEXT_SPRITE_INDEX_START << 3);
                 w.u16 += (i << 3); // sprite attr is 8 bytes per sprite
                 w.u16 += 6; // we turn sprite off by just setting z to 0, which is in byte 6
@@ -185,7 +186,7 @@ void FreeSpriteStr(uint8_t str_slot) {
         if (sprite_dibs[i] == str_slot) {
             // sprite is claimed by this slot
             // delete sprite
-            w.u16 = ((uint16_t)(VERA_REG_SPRITE_ATTR_M) << 8);
+            w.u16 = ((uint16_t)(MEM_VRAM_1_VERA_SPRITE_ATTR_M) << 8);
             w.u16 += (i << 3); // sprite attr is 8 bytes per sprite
             w.u16 += 6; // we turn sprite off by just setting z to 0, which is in byte 6
             vera->ADDRx_M = w.u8_h;
@@ -235,7 +236,7 @@ void Print2BppBitmapStr(char* str, uint8_t buffer_n, uint8_t x, uint8_t y) {
     // -- vera->DATA0 for reading the characters
     // selects ADDR0
     vera->CTRL = 0;
-    vera->ADDRx_H = ADDR_INC_2 | FONT_VRAM_PAGE;
+    vera->ADDRx_H = ADDR_INC_2 | MEM_FONT_VRAM_PAGE;
     // -- vera->DATA1 for writting the characters into bitmap
     vera->CTRL = 1;
     vera->ADDRx_H = ADDR_INC_80 | buffer_n;
@@ -247,7 +248,7 @@ void Print2BppBitmapStr(char* str, uint8_t buffer_n, uint8_t x, uint8_t y) {
 
         // get address of char in font
         font_addr.u16 = (next_char << 4);
-        font_addr.u8_h += FONT_2BPP_START_M;
+        font_addr.u8_h += MEM_2BPP_FONT_1_ADDR_M;
         // get address of target starting pixel
         pixel_addr.u16 = lookup_bitmap_y[y];
         pixel_addr.u16 += x + i + i;

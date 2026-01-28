@@ -66,6 +66,8 @@ void MathTest(_eMathTest t) {
     // sets this up as a dummy target to write to
     vera->CTRL = 0;
     vera->ADDRx_H = ADDR_INC_0;
+    vera->ADDRx_M = 0;
+    vera->ADDRx_L = 0;
 
     switch (t) {
     case MATH_TEST_NOTHING:

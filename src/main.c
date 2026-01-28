@@ -22,9 +22,9 @@ void test_sprite() {
     vera->DC0.HSCALE = 64;
     vera->DC0.VSCALE = 64;
     vera->ADDRx_H = 0x11;
-    vera->ADDRx_M = VERA_REG_SPRITE_ATTR_M;
+    vera->ADDRx_M = MEM_VRAM_1_VERA_SPRITE_ATTR_M;
     vera->ADDRx_L = 0;
-    c = (FONT_4BPP_START_M) << 3;
+    c = (MEM_4BPP_FONT_1_ADDR_M) << 3;
     c += 0xE9;
     vera->DATA0 = (uint8_t)c; // addr 12-5
     vera->DATA0 = (uint8_t)(c >> 8); // addr 16-13
@@ -53,6 +53,7 @@ char test_song_file_name_3[] = "test assets/all ur base.zsm";
 char str_lag[] = "--";
 char str_wait_count[] = "----";
 
+uint8_t show_debug = 1;
 uint8_t last_tick = 0, current_tick = 0;
 void main() {
     uint16_t wait_count = 0, lag_count = 0;
@@ -60,7 +61,7 @@ void main() {
     char* selected_song = 0;
     uint8_t song_name_length = 0;
 
-    //debug
+    // emulator debug  mode
     *(uint8_t*)0x9FB0 = 1;
 
     //  ---- IRQ
@@ -128,11 +129,23 @@ void main() {
 
         // segment 1: input
         HandleInputActions();
+        //show inputs on screen
+        if (IsActionJustPressed(ACTION_DEBUG)) {
+            if (!show_debug) {
+                show_debug = 1;
+                Print2BppBitmapStr("0", bitmap_front_buffer, 67, 52);
+                Print2BppBitmapStr("1", bitmap_front_buffer, 67, 64);
+            } else { show_debug = 0; BitmapFillRect(bitmap_front_buffer, 0, 52, 50, 26, 22); }
+        }
+        if (show_debug) {
+            JoystickDrawToBitmap(0, bitmap_front_buffer, 70, 50);
+            JoystickDrawToBitmap(1, bitmap_front_buffer, 70, 62);
+            InputActionDrawToBitmap(bitmap_front_buffer, 52, 66);
+        }
         ProfilerEndSegment();
 
         // segment 2: placeholder dummy
-        JoystickDrawToBitmap(0, bitmap_front_buffer, 50, 10);
-        JoystickDrawToBitmap(1, bitmap_front_buffer, 60, 10);
+
         ProfilerEndSegment();
 
         // segment 3: placeholder dummy
@@ -246,5 +259,11 @@ static void PrintProfilerBitmapFrame(uint8_t buffer_n) {
 
     Print2BppBitmapStr("lag frame:", buffer_n, 48, 202);
     Print2BppBitmapStr("spare cpu:", buffer_n, 48, 210);
+
+    // joystick
+    if (show_debug) {
+        Print2BppBitmapStr("0", bitmap_front_buffer, 67, 52);
+        Print2BppBitmapStr("1", bitmap_front_buffer, 67, 64);
+    }
 }
 

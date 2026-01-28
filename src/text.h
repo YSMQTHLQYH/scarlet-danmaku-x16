@@ -7,11 +7,6 @@
 #define TEXT_SPRITE_INDEX_START 0x60
 #define TEXT_MAX_SPRITES        0x20
 
-// all on page 0
-#define FONT_VRAM_PAGE  0
-#define FONT_2BPP_START_M 0xD0// starts at 0:D000
-#define FONT_4BPP_START_M 0xE0// starts at 0:E000
-
 
 // loads KERNAL's monocrome font and makes a 2/4bpp copy of it for bitmap graphics / sprites
 // returns 0 on success, 1 on failure

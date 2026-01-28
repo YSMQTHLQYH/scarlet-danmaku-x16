@@ -183,6 +183,9 @@ typedef struct
 
 extern volatile _sVeraReg* const vera;
 
+/*
+these all are on memory_map.h now for consistency
+they do belong here though, so I'll comment them out instead
 // all on page 1
 
 // PSG reg 0 = 0xF9C0
@@ -190,11 +193,11 @@ extern volatile _sVeraReg* const vera;
 #define VERA_REG_PSG_L    0xC0
 // palette reg 0 = 0xFA00
 #define VERA_REG_PALETTE_M    0xFA //low starts at 00
-
 // spritte attributes reg 0 = 0xFC00
 // ranges from 0x1FC00 to 0x1FFFF
-#define VERA_REG_SPRITE_ATTR_M  0xFC 
+#define VERA_REG_SPRITE_ATTR_M  0xFC
 #define SPRITE_ATTR_SIZE        8
+*/
 
 typedef struct {
     uint8_t addr_l; // bits 12-5 of actual addr (of image data)

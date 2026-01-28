@@ -34,6 +34,7 @@ typedef enum {
 	ACTION_LEFT,
 	ACTION_RIGHT,
 	ACTION_START,
+	ACTION_DEBUG,
 
 
 	//not actually an input, basically a macro for number of IDs
@@ -56,6 +57,7 @@ uint8_t IsActionJustPressed(_eInputActionId id);
 
 //  ---- draw pressed buttons on bitmap layer
 void JoystickDrawToBitmap(uint8_t joystick_n, uint8_t buffer_n, uint8_t x, uint8_t y);
+void InputActionDrawToBitmap(uint8_t buffer_n, uint8_t x, uint8_t y);
 
 
 

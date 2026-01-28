@@ -1,5 +1,6 @@
 #include "zsm_player.h"
 #include "x16.h"
+#include "memory_map.h"
 
 #define ZSM_START   HIGH_RAM_START
 #define ZSM_HEADER (*(_sZsmHeader*)ZSM_START)
@@ -21,7 +22,7 @@ void ZsmTick() {
     SET_RAM_BANK(zsm.index_bank);
     vera->CTRL = 0x00; // using DATA0 for PSG loading
     vera->ADDRx_H = 0x01;// using addr_inc = 0, all registers are on page 1 (second half)
-    vera->ADDRx_M = VERA_REG_PSG_M;
+    vera->ADDRx_M = MEM_VRAM_1_VERA_PSG_M;
 
     while (1) {
         // read
@@ -29,7 +30,7 @@ void ZsmTick() {
         switch (cmd & 0xC0) { // switch(cmd_type)
         case 0x00:
             // ---- PSG_WRITE
-            vera->ADDRx_L = (cmd & 0x3F) + VERA_REG_PSG_L;
+            vera->ADDRx_L = (cmd & 0x3F) + MEM_VRAM_1_VERA_PSG_L;
             vera->DATA0 = ZsmNextByte();
             break;
 
@@ -78,8 +79,8 @@ static void StopAllPlayingSounds() {
     //  ---- PSG
     vera->CTRL = 0x00; // using DATA0 for PSG loading
     vera->ADDRx_H = 0x11;// using addr_inc = 1, all registers are on page 1 (second half)
-    vera->ADDRx_M = VERA_REG_PSG_M;
-    vera->ADDRx_L = VERA_REG_PSG_L;
+    vera->ADDRx_M = MEM_VRAM_1_VERA_PSG_M;
+    vera->ADDRx_L = MEM_VRAM_1_VERA_PSG_L;
     for (i = 0; i < 64; i++) {
         vera->DATA0 = 0;
     }

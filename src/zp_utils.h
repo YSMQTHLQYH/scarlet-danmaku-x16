@@ -4,6 +4,7 @@
 // too specific to be game code but not exactly hardware stuff that goes in x16.h
 
 #include <stdint.h>
+#include "memory_map.h"
 
 typedef union {
     struct { uint8_t u8_l; uint8_t u8_h; };

@@ -13,10 +13,6 @@ conviniently we have frame buffer 0 on VRAM page 0 and frame buffer 1 on VRAM pa
 //#define BITMAP_BPP      2 // I don't think there's much use for this
 #define BITMAP_PIXELS_PER_BYTE  4 // inverse of BITMAP_BPP I guess
 
-//#define BITMAP_ADDR_START_M   0x0000
-#define BITMAP_ADDR_START_M   0x00
-//#define BITMAP_ADDR_END     0x4AFF
-#define BITMAP_ADDR_END_M     0x4A
 
 
 extern uint16_t lookup_bitmap_y[BITMAP_HEIGHT];
@@ -30,5 +26,7 @@ void BitmapInit(uint8_t start_frame_buffer);
 void BitmapClearBuffer(uint8_t buffer_n, uint8_t color);
 void BitmapSwapBuffers();
 
+// x and w is in increments of 4 pixels
+void BitmapFillRect(uint8_t buffer_n, uint8_t color, uint8_t x, uint8_t y, uint8_t w, uint8_t h);
 
 #endif

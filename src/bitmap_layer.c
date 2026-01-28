@@ -1,5 +1,6 @@
 #include "bitmap_layer.h"
 #include "x16.h"
+#include "zp_utils.h"
 
 uint8_t bitmap_front_buffer = 0;
 uint8_t bitmap_back_buffer = 0;
@@ -25,7 +26,7 @@ void BitmapInit(uint8_t start_frame_buffer) {
     vera->CTRL = 0;
     vera->DC0.VIDEO |= (1 << 5);
     vera->LAYER1.CONFIG = (1 << 2) + COLOR_DEPTH_2BPP;
-    vera->LAYER1.BITMAPBASE = ((bitmap_front_buffer << 7) | (BITMAP_ADDR_START_M >> 1) & 0xFC);
+    vera->LAYER1.BITMAPBASE = ((bitmap_front_buffer << 7) | (MEM_BITMAP_1_ADDR_M >> 1) & 0xFC);
 
     BitmapClearBuffer(0, 0);
     BitmapClearBuffer(1, 0);
@@ -41,7 +42,7 @@ void BitmapClearBuffer(uint8_t buffer_n, uint8_t color) {
     }
     vera->CTRL = 0;
     vera->ADDRx_H = (buffer_n & 1) | ADDR_INC_1;
-    vera->ADDRx_M = BITMAP_ADDR_START_M;
+    vera->ADDRx_M = MEM_BITMAP_1_ADDR_M;
     vera->ADDRx_L = 0;
 
     for (j = 0; j < BITMAP_HEIGHT; j++) {
@@ -55,10 +56,39 @@ void BitmapSwapBuffers() {
     if (bitmap_front_buffer) {
         bitmap_front_buffer = 0;
         bitmap_back_buffer = 1;
-        vera->LAYER1.BITMAPBASE = ((BITMAP_ADDR_START_M >> 1) & 0xFC);
+        vera->LAYER1.BITMAPBASE = ((MEM_BITMAP_1_ADDR_M >> 1) & 0xFC);
         return;
     }
     bitmap_front_buffer = 1;
     bitmap_back_buffer = 0;
-    vera->LAYER1.BITMAPBASE = (0x80 + (BITMAP_ADDR_START_M >> 1) & 0xFC);
+    vera->LAYER1.BITMAPBASE = (0x80 + (MEM_BITMAP_1_ADDR_M >> 1) & 0xFC);
+}
+
+
+void BitmapFillRect(uint8_t buffer_n, uint8_t color, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+    uint8_t i, j, c;
+    _uConv16 addr;
+    i = color & 0x03;
+    c = i;
+    while (i) {
+        i <<= 2;
+        c |= i;
+    }
+
+    vera->CTRL = 0;
+    vera->ADDRx_H = (buffer_n & 1) | ADDR_INC_1;
+    addr.u8_l = x;
+    addr.u8_h = MEM_BITMAP_1_ADDR_M;
+    addr.u16 += lookup_bitmap_y[y];
+    vera->ADDRx_M = addr.u8_h;
+    vera->ADDRx_L = addr.u8_l;
+
+    for (j = 0; j < h; j++) {
+        for (i = 0; i < w; i++) {
+            vera->DATA0 = c;
+        }
+        addr.u16 += 80;
+        vera->ADDRx_M = addr.u8_h;
+        vera->ADDRx_L = addr.u8_l;
+    }
 }
