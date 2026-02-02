@@ -23,7 +23,7 @@
 
 //  ----
 
-#define TEST    16
+#define TEST    32
 #define TEST_SIZE   64
 uint16_t test_arr[TEST * TEST_SIZE] = { 0 };
 #define TEST_ADDR_M 0x4B
@@ -158,9 +158,8 @@ void MathTest(_eMathTest t) {
 
         asm("lda #%b", TEST_ADDR_M); // A = TEST_ADDR_M
         asm("sta $9F21"); //vera->ADDRx_M = TEST_ADDR_M;
-        asm("eor #%b", TEST_ADDR_M); // A ^= TEST_ADDR_M; //(XOR A with itself, A = 0)
+        asm("lda #0"); // A = 0;
         asm("sta $9F20"); //vera->ADDRx_L = 0;
-
 
         asm("ldx $9F24"); // (w.u8_h): X = vera->DATA1;
     vera_u0_asm_little_loop: // checked at the end first statement is repeated line above
@@ -173,7 +172,7 @@ void MathTest(_eMathTest t) {
         asm("txa"); // A = (w.u8_h): X 
         asm("adc $9F24"); // A += vera->DATA1;
         // write w.u16 to vera->DATA0
-        asm("sty $9F23"); // vera->DATA0 = A (w.u8_h)
+        asm("sta $9F23"); // vera->DATA0 = A (w.u8_h)
         asm("sty $9F23"); // vera->DATA0 = Y (w.u8_l)
 
         // check for equivalen of while (w.u8_h != 0) 

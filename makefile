@@ -2,9 +2,10 @@ CC=cl65
 CFLAGS=-O -o out\CH1.PRG -t cx16
 SRC=src
 SRCS=$(wildcard $(SRC)/*.c)
+ASMSRCS=$(wildcard $(SRC)/*.s)
 
 make:
-	$(CC) $(CFLAGS) $(SRCS)
+	$(CC) $(CFLAGS) $(SRCS) $(ASMSRCS)
 
 .PHONY: run
 run:

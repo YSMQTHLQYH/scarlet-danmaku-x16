@@ -3,38 +3,140 @@
 #include "x16.h"
 #include "zp_utils.h"
 #include "input_action.h"
+#include "graphics_utils.h"
+#include "bitmap_layer.h"
+#include "sprite_manager.h"
+
 #include "zsm_player.h"
 #include "text.h"
-#include "bitmap_layer.h"
 
 #include "profiler.h"
 #include "math_tests.h"
 
 
 
-//void Update();
 
 void test_sprite() {
-    static union { uint16_t w; uint8_t b[2]; } pos = { 0 };
-    uint16_t c;
-    vera->CTRL = 0x00;
-    vera->DC0.VIDEO = 0x61;
-    vera->DC0.HSCALE = 64;
-    vera->DC0.VSCALE = 64;
+    static uint8_t x = 100, y = 100, b = 0, frame = 0;
+    uint8_t j, c;
+    uint16_t i;
+    _uConv16 addr;
+    _sFileLoadCtx pl = { 0 };
+    // fill sprite graphics
+    addr.u16 = MEM_VRAM_0_UNUSED_2_START;
+    vera->CTRL = 0;
+    vera->ADDRx_H = 0x10;
+    vera->ADDRx_M = addr.u8_h;
+    vera->ADDRx_L = addr.u8_l;
+
+    if (b == 0) {
+        b = 1;
+        for (j = 0; j < 16; j++) {
+            for (i = 0; i < 256; i++) {
+                c = (uint8_t)i;
+                vera->DATA0 = c;
+            }
+        }
+        pl.filename = "test assets/testplayer.bin";
+        pl.name_lenght = 12 + 14;
+        pl.dest_addr = (void*)MEM_VRAM_1_KERNAL_CHARSET_START;
+        pl.header_mode = FILE_LOAD_HEADERLESS;
+        pl.target_mode = FILE_LOAD_VRAM_P1;
+        if (!load_file(&pl)) {
+            EMU_DEBUG_1(0xFA);
+            EMU_DEBUG_1(pl.error_code);
+        }
+        pl.filename = "test assets/programmerart.bin";
+        pl.name_lenght = 12 + 17;
+        pl.dest_addr = (void*)(MEM_VRAM_0_UNUSED_2_START + 4096);
+        pl.header_mode = FILE_LOAD_HEADERLESS;
+        pl.target_mode = FILE_LOAD_VRAM_P0;
+        if (!load_file(&pl)) {
+            EMU_DEBUG_1(0xFA);
+            EMU_DEBUG_1(pl.error_code);
+        }
+    }
+
+    // set up hardware sprite
+    addr.u16 = MEM_VRAM_1_VERA_SPRITE_ATTR_START;
     vera->ADDRx_H = 0x11;
-    vera->ADDRx_M = MEM_VRAM_1_VERA_SPRITE_ATTR_M;
-    vera->ADDRx_L = 0;
-    c = (MEM_4BPP_FONT_1_ADDR_M) << 3;
-    c += 0xE9;
-    vera->DATA0 = (uint8_t)c; // addr 12-5
-    vera->DATA0 = (uint8_t)(c >> 8); // addr 16-13
-    pos.w += 0x0280;
-    vera->DATA0 = pos.b[1];//x
+    vera->ADDRx_M = addr.u8_h;
+    vera->ADDRx_L = addr.u8_l;
+    // sprite "player"
+    if (IsActionPressed(ACTION_LEFT))x--;
+    if (IsActionPressed(ACTION_RIGHT))x++;
+    if (IsActionPressed(ACTION_UP))y--;
+    if (IsActionPressed(ACTION_DOWN))y++;
+    addr.u16 = MEM_VRAM_1_KERNAL_CHARSET_START >> 5;
+    addr.u8_h |= 0x08; // addr bit 16
+    vera->DATA0 = addr.u8_l; // addr 12-5
+    vera->DATA0 = addr.u8_h | 0x00; // addr 16-13 (and mode)
+    vera->DATA0 = x;//x
     vera->DATA0 = 0;
-    vera->DATA0 = 0x7F;//y
+    vera->DATA0 = y;//y
+    vera->DATA0 = 0;
+    vera->DATA0 = 0x0C;//z, flip
+    vera->DATA0 = 0xAF;//size, palete
+
+    // sprite 64x64
+    addr.u16 = MEM_VRAM_0_UNUSED_2_START >> 5;
+    vera->DATA0 = addr.u8_l; // addr 12-5
+    vera->DATA0 = addr.u8_h | 0x80; // addr 16-13 (and mode)
+    vera->DATA0 = 0x10;//x
+    vera->DATA0 = 0;
+    vera->DATA0 = 0x10;//y
+    vera->DATA0 = 0;
+    vera->DATA0 = 0x0C;//z, flip
+    vera->DATA0 = 0xF0;//size, palete
+
+    // sprite 32x32
+    vera->DATA0 = addr.u8_l; // addr 12-5
+    vera->DATA0 = addr.u8_h | 0x80; // addr 16-13
+    vera->DATA0 = 0x10;//x
+    vera->DATA0 = 0;
+    vera->DATA0 = 0x60;//y
+    vera->DATA0 = 0;
+    vera->DATA0 = 0x0C;//z, flip
+    vera->DATA0 = 0xA0;//size, palete
+    // sprite 16x16
+    //addr.u16 += (128 >> 5);
+    vera->DATA0 = addr.u8_l; // addr 12-5
+    vera->DATA0 = addr.u8_h | 0x80; // addr 16-13
+    vera->DATA0 = 0x40;//x
+    vera->DATA0 = 0;
+    vera->DATA0 = 0x60;//y
+    vera->DATA0 = 0;
+    vera->DATA0 = 0x0C;//z, flip
+    vera->DATA0 = 0x50;//size, palete
+    // sprite 8x8
+    vera->DATA0 = addr.u8_l; // addr 12-5
+    vera->DATA0 = addr.u8_h | 0x80; // addr 16-13
+    vera->DATA0 = 0x60;//x
+    vera->DATA0 = 0;
+    vera->DATA0 = 0x60;//y
     vera->DATA0 = 0;
     vera->DATA0 = 0x0C;//z, flip
     vera->DATA0 = 0x00;//size, palete
+
+
+    // sprite programmerart
+    addr.u16 = (MEM_VRAM_0_UNUSED_2_START + 4096);
+    addr.u16 += ((frame++ >> 3) << 8);
+    addr.u16 >>= 5;
+    vera->DATA0 = addr.u8_l; // addr 12-5
+    vera->DATA0 = addr.u8_h | 0x80; // addr 16-13
+    vera->DATA0 = 0x20;//x
+    vera->DATA0 = 0;
+    vera->DATA0 = 0x100;//y
+    vera->DATA0 = 0;
+    vera->DATA0 = 0x0C;//z, flip
+    vera->DATA0 = 0x50;//size, palete
+
+
+    SpriteManagerNotifyChanged((SPRITE_ATTR_ADDR_H << 8) | x);
+    return;
+
+
 }
 
 static void Init();
@@ -52,6 +154,8 @@ char test_song_file_name_3[] = "test assets/all ur base.zsm";
 
 char str_lag[] = "--";
 char str_wait_count[] = "----";
+
+
 
 uint8_t show_debug = 1;
 uint8_t last_tick = 0, current_tick = 0;
@@ -145,12 +249,11 @@ void main() {
         ProfilerEndSegment();
 
         // segment 2: placeholder dummy
-
+        test_sprite();
         ProfilerEndSegment();
 
         // segment 3: placeholder dummy
         ProfilerEndSegment();
-        test_sprite();
 
         // segment 4: math
         MathTest(test_number);
@@ -185,6 +288,12 @@ void main() {
 
 }
 
+uint16_t color_palette[] = {
+    0x2A3, 0xBD2, 0xEFC, 0x6EF,
+    0xFD4, 0xFAD, 0x2EC, 0x0AC,
+    0xF93, 0xE36, 0xC3B, 0x168,
+    0xE53, 0xA23, 0x739, 0x214,
+};
 static void Init() {
     uint8_t s;
     //  ---- IRQ
@@ -210,6 +319,8 @@ static void Init() {
 
     BitmapInit(0);
     PrintProfilerBitmapFrame(0);
+
+    SetColorPalette(15, color_palette);
 }
 
 char prf_str[] = "----";
