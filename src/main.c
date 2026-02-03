@@ -24,17 +24,17 @@ void test_sprite() {
     _sFileLoadCtx pl = { 0 };
     // fill sprite graphics
     addr.u16 = MEM_VRAM_0_UNUSED_2_START;
-    vera->CTRL = 0;
-    vera->ADDRx_H = 0x10;
-    vera->ADDRx_M = addr.u8_h;
-    vera->ADDRx_L = addr.u8_l;
+    VERA_CTRL = 0;
+    VERA_ADDRx_H = 0x10;
+    VERA_ADDRx_M = addr.u8_h;
+    VERA_ADDRx_L = addr.u8_l;
 
     if (b == 0) {
         b = 1;
         for (j = 0; j < 16; j++) {
             for (i = 0; i < 256; i++) {
                 c = (uint8_t)i;
-                vera->DATA0 = c;
+                VERA_DATA0 = c;
             }
         }
         pl.filename = "test assets/testplayer.bin";
@@ -59,9 +59,9 @@ void test_sprite() {
 
     // set up hardware sprite
     addr.u16 = MEM_VRAM_1_VERA_SPRITE_ATTR_START;
-    vera->ADDRx_H = 0x11;
-    vera->ADDRx_M = addr.u8_h;
-    vera->ADDRx_L = addr.u8_l;
+    VERA_ADDRx_H = 0x11;
+    VERA_ADDRx_M = addr.u8_h;
+    VERA_ADDRx_L = addr.u8_l;
     // sprite "player"
     if (IsActionPressed(ACTION_LEFT))x--;
     if (IsActionPressed(ACTION_RIGHT))x++;
@@ -69,68 +69,68 @@ void test_sprite() {
     if (IsActionPressed(ACTION_DOWN))y++;
     addr.u16 = MEM_VRAM_1_KERNAL_CHARSET_START >> 5;
     addr.u8_h |= 0x08; // addr bit 16
-    vera->DATA0 = addr.u8_l; // addr 12-5
-    vera->DATA0 = addr.u8_h | 0x00; // addr 16-13 (and mode)
-    vera->DATA0 = x;//x
-    vera->DATA0 = 0;
-    vera->DATA0 = y;//y
-    vera->DATA0 = 0;
-    vera->DATA0 = 0x0C;//z, flip
-    vera->DATA0 = 0xAF;//size, palete
+    VERA_DATA0 = addr.u8_l; // addr 12-5
+    VERA_DATA0 = addr.u8_h | 0x00; // addr 16-13 (and mode)
+    VERA_DATA0 = x;//x
+    VERA_DATA0 = 0;
+    VERA_DATA0 = y;//y
+    VERA_DATA0 = 0;
+    VERA_DATA0 = 0x0C;//z, flip
+    VERA_DATA0 = 0xAF;//size, palete
 
     // sprite 64x64
     addr.u16 = MEM_VRAM_0_UNUSED_2_START >> 5;
-    vera->DATA0 = addr.u8_l; // addr 12-5
-    vera->DATA0 = addr.u8_h | 0x80; // addr 16-13 (and mode)
-    vera->DATA0 = 0x10;//x
-    vera->DATA0 = 0;
-    vera->DATA0 = 0x10;//y
-    vera->DATA0 = 0;
-    vera->DATA0 = 0x0C;//z, flip
-    vera->DATA0 = 0xF0;//size, palete
+    VERA_DATA0 = addr.u8_l; // addr 12-5
+    VERA_DATA0 = addr.u8_h | 0x80; // addr 16-13 (and mode)
+    VERA_DATA0 = 0x10;//x
+    VERA_DATA0 = 0;
+    VERA_DATA0 = 0x10;//y
+    VERA_DATA0 = 0;
+    VERA_DATA0 = 0x0C;//z, flip
+    VERA_DATA0 = 0xF0;//size, palete
 
     // sprite 32x32
-    vera->DATA0 = addr.u8_l; // addr 12-5
-    vera->DATA0 = addr.u8_h | 0x80; // addr 16-13
-    vera->DATA0 = 0x10;//x
-    vera->DATA0 = 0;
-    vera->DATA0 = 0x60;//y
-    vera->DATA0 = 0;
-    vera->DATA0 = 0x0C;//z, flip
-    vera->DATA0 = 0xA0;//size, palete
+    VERA_DATA0 = addr.u8_l; // addr 12-5
+    VERA_DATA0 = addr.u8_h | 0x80; // addr 16-13
+    VERA_DATA0 = 0x10;//x
+    VERA_DATA0 = 0;
+    VERA_DATA0 = 0x60;//y
+    VERA_DATA0 = 0;
+    VERA_DATA0 = 0x0C;//z, flip
+    VERA_DATA0 = 0xA0;//size, palete
     // sprite 16x16
     //addr.u16 += (128 >> 5);
-    vera->DATA0 = addr.u8_l; // addr 12-5
-    vera->DATA0 = addr.u8_h | 0x80; // addr 16-13
-    vera->DATA0 = 0x40;//x
-    vera->DATA0 = 0;
-    vera->DATA0 = 0x60;//y
-    vera->DATA0 = 0;
-    vera->DATA0 = 0x0C;//z, flip
-    vera->DATA0 = 0x50;//size, palete
+    VERA_DATA0 = addr.u8_l; // addr 12-5
+    VERA_DATA0 = addr.u8_h | 0x80; // addr 16-13
+    VERA_DATA0 = 0x40;//x
+    VERA_DATA0 = 0;
+    VERA_DATA0 = 0x60;//y
+    VERA_DATA0 = 0;
+    VERA_DATA0 = 0x0C;//z, flip
+    VERA_DATA0 = 0x50;//size, palete
     // sprite 8x8
-    vera->DATA0 = addr.u8_l; // addr 12-5
-    vera->DATA0 = addr.u8_h | 0x80; // addr 16-13
-    vera->DATA0 = 0x60;//x
-    vera->DATA0 = 0;
-    vera->DATA0 = 0x60;//y
-    vera->DATA0 = 0;
-    vera->DATA0 = 0x0C;//z, flip
-    vera->DATA0 = 0x00;//size, palete
+    VERA_DATA0 = addr.u8_l; // addr 12-5
+    VERA_DATA0 = addr.u8_h | 0x80; // addr 16-13
+    VERA_DATA0 = 0x60;//x
+    VERA_DATA0 = 0;
+    VERA_DATA0 = 0x60;//y
+    VERA_DATA0 = 0;
+    VERA_DATA0 = 0x0C;//z, flip
+    VERA_DATA0 = 0x00;//size, palete
 
 
     // sprite programmerart
     addr.u16 = (MEM_VRAM_0_UNUSED_2_START + 4096);
     addr.u16 += ((frame++ >> 3) << 8);
     addr.u16 >>= 5;
-    vera->DATA0 = addr.u8_l; // addr 12-5
-    vera->DATA0 = addr.u8_h | 0x80; // addr 16-13
-    vera->DATA0 = 0x20;//x
-    vera->DATA0 = 0;
-    vera->DATA0 = 0x100;//y
-    vera->DATA0 = 0;
-    vera->DATA0 = 0x0C;//z, flip
-    vera->DATA0 = 0x50;//size, palete
+    VERA_DATA0 = addr.u8_l; // addr 12-5
+    VERA_DATA0 = addr.u8_h | 0x80; // addr 16-13
+    VERA_DATA0 = 0x20;//x
+    VERA_DATA0 = 0;
+    VERA_DATA0 = 0x100;//y
+    VERA_DATA0 = 0;
+    VERA_DATA0 = 0x0C;//z, flip
+    VERA_DATA0 = 0x50;//size, palete
 
 
     SpriteManagerNotifyChanged((SPRITE_ATTR_ADDR_H << 8) | x);
@@ -297,7 +297,7 @@ uint16_t color_palette[] = {
 static void Init() {
     uint8_t s;
     //  ---- IRQ
-    vera->IEN |= 0x01; //enables VSYNC interrupt if it wasn't already for some reason
+    VERA_IEN |= 0x01; //enables VSYNC interrupt if it wasn't already for some reason
 
     //  ---- text
     s = HijackRomCharset(12, 4, 2);
@@ -312,10 +312,10 @@ static void Init() {
     InputActionInit(0);
 
     //  ---- graphics
-    vera->CTRL = 0x00;
-    vera->DC0.VIDEO = 0x61;
-    vera->DC0.HSCALE = 64;
-    vera->DC0.VSCALE = 64;
+    VERA_CTRL = 0x00;
+    VERA_DC0_VIDEO = 0x61;
+    VERA_DC0_HSCALE = 64;
+    VERA_DC0_VSCALE = 64;
 
     BitmapInit(0);
     PrintProfilerBitmapFrame(0);

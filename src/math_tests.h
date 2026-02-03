@@ -9,6 +9,7 @@ typedef enum {
     MATH_TEST_WHILE,
     MATH_TEST_VERA_UNTIL0,
     MATH_TEST_VERA_REPEAT_MACRO,
+    MATH_TEST_VERA_BETTER_WRITE,
     MATH_TEST_VERA_UNTIL0_ASM,
     MATH_TEST_WASTE_TIME,
 
@@ -19,7 +20,6 @@ typedef enum {
 
 void MathTestsinit();
 void MathTest(_eMathTest t);
-
 
 
 

@@ -1,5 +1,3 @@
-.segment "CODE"
-
 .import popa
 
 .export _SpriteManagerNotifyChanged, _SpriteManagerWriteChanges
@@ -15,8 +13,12 @@ _sprite_attr_highest_changed = sprite_attr_highest_changed
 
 MAX_SPRITES=128
 .import MEM_BANK_SPRITE_TABLE
+.import RAM_BANK
+.segment "DATA"
 sprite_attr_lowest_changed: .res 8, $80
 sprite_attr_highest_changed: .res 8, $00
+
+.segment "CODE"
 
 ; args: attr-spr
 ; (low byte is sprite_n, high byte is attr_n)

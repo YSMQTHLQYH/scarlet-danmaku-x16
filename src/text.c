@@ -22,16 +22,16 @@ uint8_t HijackRomCharset(uint8_t charset, uint8_t font_bpp, uint8_t color) {
     KernalScreenSetCharset(charset);
 
     // DATA1 for reading KERNAL font
-    vera->CTRL = 1;
-    vera->ADDRx_H = 0x11; // inc = 1, page = 1
-    vera->ADDRx_M = MEM_VRAM_1_KERNAL_FONT_ADDR_M;
-    vera->ADDRx_L = 0;
+    VERA_CTRL = 1;
+    VERA_ADDRx_H = 0x11; // inc = 1, page = 1
+    VERA_ADDRx_M = MEM_VRAM_1_KERNAL_FONT_ADDR_M;
+    VERA_ADDRx_L = 0;
 
     // DATA0 for writting our font
-    vera->CTRL = 0;
-    vera->ADDRx_H = 0x10; // inc = 1, page = 0
-    vera->ADDRx_M = (font_bpp == 4) ? MEM_4BPP_FONT_1_ADDR_M : MEM_2BPP_FONT_1_ADDR_M;
-    vera->ADDRx_L = 0;
+    VERA_CTRL = 0;
+    VERA_ADDRx_H = 0x10; // inc = 1, page = 0
+    VERA_ADDRx_M = (font_bpp == 4) ? MEM_4BPP_FONT_1_ADDR_M : MEM_2BPP_FONT_1_ADDR_M;
+    VERA_ADDRx_L = 0;
 
     c = (font_bpp == 4) ? (color & 0x0F) : (color & 0x03);
 
@@ -41,7 +41,7 @@ uint8_t HijackRomCharset(uint8_t charset, uint8_t font_bpp, uint8_t color) {
             // ---- read one row of pixels
 
             // -- read it from KERNAL charset
-            d_in = vera->DATA1;
+            d_in = VERA_DATA1;
             for (px = 0; px < 8; px++) {
                 if (d_in & (0x80 >> px)) {
                     // pixel has color
@@ -56,7 +56,7 @@ uint8_t HijackRomCharset(uint8_t charset, uint8_t font_bpp, uint8_t color) {
                 for (px = 0; px < 8; px += 2) {
                     d_out = (buf[px] << 4);
                     d_out += buf[px + 1];
-                    vera->DATA0 = d_out;
+                    VERA_DATA0 = d_out;
                 }
             } else { // font_bpp == 2
                 for (px = 0; px < 8; px += 4) {
@@ -64,7 +64,7 @@ uint8_t HijackRomCharset(uint8_t charset, uint8_t font_bpp, uint8_t color) {
                     d_out += (buf[px + 1] << 4);
                     d_out += (buf[px + 2] << 2);
                     d_out += buf[px + 3];
-                    vera->DATA0 = d_out;
+                    VERA_DATA0 = d_out;
                 }
             }
             // copied one row of pixels
@@ -107,8 +107,8 @@ uint8_t PrintSpriteStr(char* str, uint8_t str_slot, uint16_t x, uint16_t y, uint
         }
     }
 
-    vera->CTRL = 0x00; // using DATA0
-    vera->ADDRx_H = 0x11; // sprite attr table is on page 1, using addr_inc = 1
+    VERA_CTRL = 0x00; // using DATA0
+    VERA_ADDRx_H = 0x11; // sprite attr table is on page 1, using addr_inc = 1
 
     next_char = str[0];
     // loops through list of SPRITES, not of characters in string
@@ -127,29 +127,29 @@ uint8_t PrintSpriteStr(char* str, uint8_t str_slot, uint16_t x, uint16_t y, uint
                 w.u16 = ((uint16_t)(MEM_VRAM_1_VERA_SPRITE_ATTR_M) << 8);
                 w.u16 += ((uint16_t)TEXT_SPRITE_INDEX_START << 3);
                 w.u16 += (i << 3); // sprite attr is 8 bytes per sprite
-                vera->ADDRx_M = w.u8_h;
-                vera->ADDRx_L = w.u8_l;
+                VERA_ADDRx_M = w.u8_h;
+                VERA_ADDRx_L = w.u8_l;
 
                 // attr byte 0: addr_l (bits 12-5)
                 // attr byte 1: addr_h (bits 16-3) (and mode but we want 0 (4bpp) anyways)
                 w.u16 = (MEM_4BPP_FONT_1_ADDR_M << 3); // FONT_4BPP_START is bits 15-7, // bit 16 is always 0 anyways
                 w.u16 += next_char; // increasing addr_l by 1 already increases index by 32 bytes (size of one tile)
-                vera->DATA0 = w.u8_l;
-                vera->DATA0 = w.u8_h;
+                VERA_DATA0 = w.u8_l;
+                VERA_DATA0 = w.u8_h;
                 // attr byte 2: x (bits 7-0)
                 // attr byte 3: x (bits 9-8)
                 w.u16 = x + (j << 3); // j is char index, moving x by 8 per char written
-                vera->DATA0 = w.u8_l;
-                vera->DATA0 = w.u8_h;
+                VERA_DATA0 = w.u8_l;
+                VERA_DATA0 = w.u8_h;
                 // attr byte 4: y (bits 7-0)
                 // attr byte 5: y (bits 9-8)
                 w.u16 = y;
-                vera->DATA0 = w.u8_l;
-                vera->DATA0 = w.u8_h;
+                VERA_DATA0 = w.u8_l;
+                VERA_DATA0 = w.u8_h;
                 // attr byte 6: collision mask, z-depth, flip
-                vera->DATA0 = 0x0C; // we don't want collision nor flip, z = 3 to always render on top
+                VERA_DATA0 = 0x0C; // we don't want collision nor flip, z = 3 to always render on top
                 // attr byte 7: height, width, palette
-                vera->DATA0 = (palette & 0x0F); // font is 8x8, we want height and width to be 0
+                VERA_DATA0 = (palette & 0x0F); // font is 8x8, we want height and width to be 0
 
 
                 // next char
@@ -163,9 +163,9 @@ uint8_t PrintSpriteStr(char* str, uint8_t str_slot, uint16_t x, uint16_t y, uint
                 w.u16 += ((uint16_t)TEXT_SPRITE_INDEX_START << 3);
                 w.u16 += (i << 3); // sprite attr is 8 bytes per sprite
                 w.u16 += 6; // we turn sprite off by just setting z to 0, which is in byte 6
-                vera->ADDRx_M = w.u8_h;
-                vera->ADDRx_L = w.u8_l;
-                vera->DATA0 = 0;
+                VERA_ADDRx_M = w.u8_h;
+                VERA_ADDRx_L = w.u8_l;
+                VERA_DATA0 = 0;
                 // mark as unused
                 sprite_dibs[i] = 0;
             }
@@ -180,8 +180,8 @@ void FreeSpriteStr(uint8_t str_slot) {
     uint8_t i;
     sprite_str_slot[str_slot] = 0; // mark slot as not used
 
-    vera->CTRL = 0x00; // using DATA0
-    vera->ADDRx_H = 0x01; // sprite attr table is on page 1, we don't need addr_inc
+    VERA_CTRL = 0x00; // using DATA0
+    VERA_ADDRx_H = 0x01; // sprite attr table is on page 1, we don't need addr_inc
     for (i = 0; i < TEXT_MAX_SPRITES; i++) {
         if (sprite_dibs[i] == str_slot) {
             // sprite is claimed by this slot
@@ -189,9 +189,9 @@ void FreeSpriteStr(uint8_t str_slot) {
             w.u16 = ((uint16_t)(MEM_VRAM_1_VERA_SPRITE_ATTR_M) << 8);
             w.u16 += (i << 3); // sprite attr is 8 bytes per sprite
             w.u16 += 6; // we turn sprite off by just setting z to 0, which is in byte 6
-            vera->ADDRx_M = w.u8_h;
-            vera->ADDRx_L = w.u8_l;
-            vera->DATA0 = 0;
+            VERA_ADDRx_M = w.u8_h;
+            VERA_ADDRx_L = w.u8_l;
+            VERA_DATA0 = 0;
             // mark sprite as not used by str
             sprite_dibs[i] = 0;
         }
@@ -233,13 +233,13 @@ void Print2BppBitmapStr(char* str, uint8_t buffer_n, uint8_t x, uint8_t y) {
 
 
     // ---- ADDRx_H and ADDRx_INC doesn't change during entire function so we can set them at the start once
-    // -- vera->DATA0 for reading the characters
+    // -- VERA_DATA0 for reading the characters
     // selects ADDR0
-    vera->CTRL = 0;
-    vera->ADDRx_H = ADDR_INC_2 | MEM_FONT_VRAM_PAGE;
-    // -- vera->DATA1 for writting the characters into bitmap
-    vera->CTRL = 1;
-    vera->ADDRx_H = ADDR_INC_80 | buffer_n;
+    VERA_CTRL = 0;
+    VERA_ADDRx_H = ADDR_INC_2 | MEM_FONT_VRAM_PAGE;
+    // -- VERA_DATA1 for writting the characters into bitmap
+    VERA_CTRL = 1;
+    VERA_ADDRx_H = ADDR_INC_80 | buffer_n;
 
     for (i = 0; i < TEXT_BITMAP_MAX_LENGHT; i++) {
         next_char = str[i];
@@ -254,20 +254,20 @@ void Print2BppBitmapStr(char* str, uint8_t buffer_n, uint8_t x, uint8_t y) {
         pixel_addr.u16 += x + i + i;
 
         // setup for even-byte pass
-        vera->CTRL = 0;
-        vera->ADDRx_M = font_addr.u8_h;
-        vera->ADDRx_L = font_addr.u8_l;
-        vera->CTRL = 1;
-        vera->ADDRx_M = pixel_addr.u8_h;
-        vera->ADDRx_L = pixel_addr.u8_l;
+        VERA_CTRL = 0;
+        VERA_ADDRx_M = font_addr.u8_h;
+        VERA_ADDRx_L = font_addr.u8_l;
+        VERA_CTRL = 1;
+        VERA_ADDRx_M = pixel_addr.u8_h;
+        VERA_ADDRx_L = pixel_addr.u8_l;
 
         // setup carry flag as boolean variable
         // set = even pass, clear = odd pass
         asm("sec");
     copy_paste_x8:
-        asm("lda $9F23"); // A = vera->DATA0
+        asm("lda $9F23"); // A = VERA_DATA0
         asm("nop");
-        asm("sta $9F24"); // vera->DATA1 = A
+        asm("sta $9F24"); // VERA_DATA1 = A
         asm("lda $9F23");
         asm("nop");
         asm("sta $9F24");
@@ -300,12 +300,12 @@ void Print2BppBitmapStr(char* str, uint8_t buffer_n, uint8_t x, uint8_t y) {
         // setup for odd-byte pass
         font_addr.u16++;
         pixel_addr.u16++;
-        vera->CTRL = 0;
-        vera->ADDRx_M = font_addr.u8_h;
-        vera->ADDRx_L = font_addr.u8_l;
-        vera->CTRL = 1;
-        vera->ADDRx_M = pixel_addr.u8_h;
-        vera->ADDRx_L = pixel_addr.u8_l;
+        VERA_CTRL = 0;
+        VERA_ADDRx_M = font_addr.u8_h;
+        VERA_ADDRx_L = font_addr.u8_l;
+        VERA_CTRL = 1;
+        VERA_ADDRx_M = pixel_addr.u8_h;
+        VERA_ADDRx_L = pixel_addr.u8_l;
         asm("clc"); //odd_pass = true
         goto copy_paste_x8;
 

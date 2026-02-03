@@ -1,8 +1,8 @@
 CC=cl65
-CFLAGS=-O -o out\CH1.PRG -t cx16
+CFLAGS=-O -o out\CH1.PRG -t cx16 -C cx16_custom.cfg
 SRC=src
 SRCS=$(wildcard $(SRC)/*.c)
-ASMSRCS=$(wildcard $(SRC)/*.s)
+ASMSRCS=$(wildcard $(SRC)/*.asm)
 
 make:
 	$(CC) $(CFLAGS) $(SRCS) $(ASMSRCS)

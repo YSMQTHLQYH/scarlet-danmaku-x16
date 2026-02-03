@@ -59,8 +59,6 @@ uint8_t load_file(_sFileLoadCtx* ctx);
 #define HIGH_RAM_END    0xBFFF
 #define HIGH_RAM_8(i)   *(uint8_t*)(HIGH_RAM_START + i)
 #define HIGH_RAM_16(i)  *(uint16_t*)(HIGH_RAM_START + i + i)
-extern volatile uint8_t* const ram_bank;
-#define SET_RAM_BANK(bank)  (*ram_bank) = bank
 
 //I don't think it's actually called "high rom" but whatever it makes sense
 #define ROM_BANK_SIZE   0x4000
@@ -68,9 +66,13 @@ extern volatile uint8_t* const ram_bank;
 // i'll implement high rom end if I ever use it
 #define HIGH_ROM_8(i)   *(uint8_t*)(HIGH_ROM_START + i)
 #define HIGH_ROM_16(i)  *(uint16_t*)(HIGH_ROM_START + i + i)
-extern volatile uint8_t* const rom_bank;
-#define SET_ROM_BANK(bank)  (*rom_bank) = bank
 
+
+// prefixing these with x16 because these feel too powerful to just be a simple variable
+extern volatile uint8_t x16_ram_bank;
+#pragma zpsym ("x16_ram_bank");
+extern volatile uint8_t x16_rom_bank;
+#pragma zpsym ("x16_rom_bank");
 
 //  ---- IRQ
 #define KERNAL_CINV (void**)0x0314
@@ -99,19 +101,9 @@ typedef enum {
 
 
 
-//  ---- vera
+//  ---- VERA
 #define SCANLINES_PER_FRAME 525
 #define SCANLINE_VSYNC      480
-
-typedef struct {
-    uint8_t CONFIG;
-    uint8_t MAPBASE;
-    union { uint8_t TILEBASE; uint8_t BITMAPBASE; };
-    uint8_t HSCROLL_L;
-    union { uint8_t HSCROLL_H; uint8_t BITMAP_COLOR_OFFSET; };
-    uint8_t VSCROLL_L;
-    uint8_t VSCROLL_H;
-}_sVeraLayerReg;
 
 typedef enum {
     DCSEL_0 = (0 << 1), // video modes
@@ -152,36 +144,34 @@ typedef enum {
     COLOR_DEPTH_SPRITE_8BPP = (1 << 7),
 }_eVeraBitDepth;
 
-typedef struct
-{
-    uint8_t ADDRx_L;
-    uint8_t ADDRx_M;
-    uint8_t ADDRx_H; // dammit c for not letting me use bitfields for this cuz order of bits is up to commpilerion {    struct {      uint8_t addr_increment : 4;      uint8_t DECR : 1;      uint8_t nibble_increment : 1;      uint8_t nibble_address : 1;      uint8_t a
-    uint8_t DATA0;
-    uint8_t DATA1;
-    uint8_t CTRL;
-    uint8_t IEN;
-    uint8_t ISR;
-    union { uint8_t IRQLINE_L; uint8_t SCANLINE_L; };
+// defining these in assembly and importing them like this is way faster than just doing it the C way
+// entirely because the compiler is dumb
+// yay for having to copy paste a bunch of variable names (and delete the _ prefix on each of them)
+extern volatile uint8_t VERA_ADDRx_L, VERA_ADDRx_M, VERA_ADDRx_H;
+extern volatile uint8_t VERA_DATA0, VERA_DATA1;
+extern volatile uint8_t VERA_CTRL;
+extern volatile uint8_t VERA_IEN, VERA_ISR;
+extern volatile uint8_t VERA_IRQLINE_L, VERA_SCANLINE_L;
 
-    union {
-        struct { uint8_t VIDEO; uint8_t HSCALE; uint8_t VSCALE; uint8_t BORDER; } DC0;
-        struct { uint8_t HSTART; uint8_t HSTOP; uint8_t VSTART; uint8_t VSTOP; } DC1;
-        struct { uint8_t FX_CTRL; uint8_t FX_TILEBASE; uint8_t FX_MAPBASE; uint8_t FX_MULT; } DC2;
-    };
+extern volatile uint8_t VERA_DC0_HSCALE, VERA_DC0_VIDEO, VERA_DC0_VSCALE, VERA_DC0_BORDER;
+extern volatile uint8_t VERA_DC1_HSTART, VERA_DC1_HSTOP, VERA_DC1_VSTART, VERA_DC1_VSTOP;
+extern volatile uint8_t VERA_DC2_FX_CTRL, VERA_DC2_FX_TILEBASE, VERA_DC2_FX_MAPBASE, VERA_DC2_FX_MULT;
+extern volatile uint8_t VERA_DC3_FX_X_INCR_L, VERA_DC3_FX_X_INCR_H, VERA_DC3_FX_Y_INCR_L, VERA_DC3_FX_Y_INCR_H;
+extern volatile uint8_t VERA_DC4_FX_X_POS_L, VERA_DC4_FX_X_POS_H, VERA_DC4_FX_Y_POS_L, VERA_DC4_FX_Y_POS_H;
+extern volatile uint8_t VERA_DC5_FX_X_POS_S, VERA_DC5_FX_Y_POS_S, VERA_DC5_FX_POLY_FILL_L, VERA_DC5_FX_POLY_FILL_H;
+extern volatile uint8_t VERA_DC6_FX_CACHE_L, VERA_DC6_FX_CACHE_M, VERA_DC6_FX_CACHE_H, VERA_DC6_FX_CACHE_U, VERA_DC6_FX_ACCUM_RESET, VERA_DC6_FX_ACCUM;
+extern volatile uint8_t VERA_DC63_VER0, VERA_DC63_VER1, VERA_DC63_VER2, VERA_DC63_VER3;
 
-    _sVeraLayerReg LAYER0;
-    _sVeraLayerReg LAYER1;
-    uint8_t AUDIO_CTRL;
-    uint8_t AUDIO_RATE;
-    uint8_t AUDIO_DATA;
-    uint8_t SPI_DATA;
-    uint8_t SPI_CTRL;
+extern volatile uint8_t VERA_L0_CFG, VERA_L0_MAPBASE, VERA_L0_TILEBASE, VERA_L0_BITMAPBASE;
+extern volatile uint8_t VERA_L0_HSCROLL_L, VERA_L0_HSCROLL_H, VERA_L0_VSCROLL_L, VERA_L0_VSCROLL_H;
+extern volatile uint8_t VERA_L1_CFG, VERA_L1_MAPBASE, VERA_L1_TILEBASE, VERA_L1_BITMAPBASE;
+extern volatile uint8_t VERA_L1_HSCROLL_L, VERA_L1_HSCROLL_H, VERA_L1_VSCROLL_L, VERA_L1_VSCROLL_H;
+
+extern volatile uint8_t VERA_AUDIO_CTRL, VERA_AUDIO_RATE, VERA_AUDIO_DATA;
+extern volatile uint8_t VERA_SPI_DATA, VERA_SPI_CTRL;
 
 
-} _sVeraReg;
 
-extern volatile _sVeraReg* const vera;
 
 /*
 these all are on memory_map.h now for consistency

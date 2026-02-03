@@ -19,10 +19,10 @@ void ZsmTick() {
     if (zsm.delay_ticks_left > 0) { return; }
 
     // set up registers for memory mapping
-    SET_RAM_BANK(zsm.index_bank);
-    vera->CTRL = 0x00; // using DATA0 for PSG loading
-    vera->ADDRx_H = 0x01;// using addr_inc = 0, all registers are on page 1 (second half)
-    vera->ADDRx_M = MEM_VRAM_1_VERA_PSG_M;
+    x16_ram_bank = zsm.index_bank;
+    VERA_CTRL = 0x00; // using DATA0 for PSG loading
+    VERA_ADDRx_H = 0x01;// using addr_inc = 0, all registers are on page 1 (second half)
+    VERA_ADDRx_M = MEM_VRAM_1_VERA_PSG_M;
 
     while (1) {
         // read
@@ -30,8 +30,8 @@ void ZsmTick() {
         switch (cmd & 0xC0) { // switch(cmd_type)
         case 0x00:
             // ---- PSG_WRITE
-            vera->ADDRx_L = (cmd & 0x3F) + MEM_VRAM_1_VERA_PSG_L;
-            vera->DATA0 = ZsmNextByte();
+            VERA_ADDRx_L = (cmd & 0x3F) + MEM_VRAM_1_VERA_PSG_L;
+            VERA_DATA0 = ZsmNextByte();
             break;
 
         case 0x40:
@@ -69,7 +69,7 @@ static uint8_t ZsmNextByte() {
     uint8_t r = *(zsm.index++);
     if (zsm.index > (uint8_t*)HIGH_RAM_END) {
         zsm.index = (uint8_t*)HIGH_RAM_START;
-        SET_RAM_BANK(++zsm.index_bank);
+        x16_ram_bank = ++zsm.index_bank;
     }
     return r;
 }
@@ -77,12 +77,12 @@ static uint8_t ZsmNextByte() {
 static void StopAllPlayingSounds() {
     uint8_t i;
     //  ---- PSG
-    vera->CTRL = 0x00; // using DATA0 for PSG loading
-    vera->ADDRx_H = 0x11;// using addr_inc = 1, all registers are on page 1 (second half)
-    vera->ADDRx_M = MEM_VRAM_1_VERA_PSG_M;
-    vera->ADDRx_L = MEM_VRAM_1_VERA_PSG_L;
+    VERA_CTRL = 0x00; // using DATA0 for PSG loading
+    VERA_ADDRx_H = 0x11;// using addr_inc = 1, all registers are on page 1 (second half)
+    VERA_ADDRx_M = MEM_VRAM_1_VERA_PSG_M;
+    VERA_ADDRx_L = MEM_VRAM_1_VERA_PSG_L;
     for (i = 0; i < 64; i++) {
-        vera->DATA0 = 0;
+        VERA_DATA0 = 0;
     }
     //  ---- OPM
     for (i = 0; i < 8; i++) {
@@ -101,14 +101,14 @@ uint8_t ZsmLoad(char* file_name, uint8_t name_length, uint8_t dest_bank) {
     fl.header_mode = FILE_LOAD_HEADERLESS;
     fl.target_mode = FILE_LOAD_RAM;
     fl.dest_addr = (void*)ZSM_START;
-    SET_RAM_BANK(dest_bank);
+    x16_ram_bank = dest_bank;
     if (load_file(&fl)) {
         // load success
 
         // load function handles ram_bank and leaves it at the end of file
         // saving it now because we need to switch bank to check header
-        zsm.end_bank = *ram_bank;
-        SET_RAM_BANK(dest_bank);
+        zsm.end_bank = x16_ram_bank;
+        x16_ram_bank = dest_bank;
 
         if (ZSM_HEADER.magic_header[0] != 0x7A || ZSM_HEADER.magic_header[1] != 0x6D) {
             //whatever was loaded was NOT a .zsm file

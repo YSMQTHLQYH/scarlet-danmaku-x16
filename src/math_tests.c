@@ -21,9 +21,59 @@
         vera->DATA0 = w.u8_l;\
 // comment "w.u16 += (int8_t)vera->DATA1;\" line out for 8 bit second number
 
-//  ----
 
-#define TEST    32
+
+// ---- vera definitions
+// this were in x16.h, turns out the compiler is very inneficient at handling these when defined in C
+// moving everything to just variables declared in assembly, copying this here so we can still do the comparasions
+typedef struct {
+    uint8_t CONFIG;
+    uint8_t MAPBASE;
+    union { uint8_t TILEBASE; uint8_t BITMAPBASE; };
+    uint8_t HSCROLL_L;
+    union { uint8_t HSCROLL_H; uint8_t BITMAP_COLOR_OFFSET; };
+    uint8_t VSCROLL_L;
+    uint8_t VSCROLL_H;
+}_sVeraLayerReg;
+
+typedef struct
+{
+    uint8_t ADDRx_L;
+    uint8_t ADDRx_M;
+    uint8_t ADDRx_H; // dammit c for not letting me use bitfields for this cuz order of bits is up to commpilerion {    struct {      uint8_t addr_increment : 4;      uint8_t DECR : 1;      uint8_t nibble_increment : 1;      uint8_t nibble_address : 1;      uint8_t a
+    uint8_t DATA0;
+    uint8_t DATA1;
+    uint8_t CTRL;
+    uint8_t IEN;
+    uint8_t ISR;
+    union { uint8_t IRQLINE_L; uint8_t SCANLINE_L; };
+
+    union {
+        struct { uint8_t VIDEO; uint8_t HSCALE; uint8_t VSCALE; uint8_t BORDER; } DC0;
+        struct { uint8_t HSTART; uint8_t HSTOP; uint8_t VSTART; uint8_t VSTOP; } DC1;
+        struct { uint8_t FX_CTRL; uint8_t FX_TILEBASE; uint8_t FX_MAPBASE; uint8_t FX_MULT; } DC2;
+    };
+
+    _sVeraLayerReg LAYER0;
+    _sVeraLayerReg LAYER1;
+    uint8_t AUDIO_CTRL;
+    uint8_t AUDIO_RATE;
+    uint8_t AUDIO_DATA;
+    uint8_t SPI_DATA;
+    uint8_t SPI_CTRL;
+
+
+} _sVeraReg;
+
+volatile _sVeraReg* const vera = (void*)0x9F20;
+
+
+//  ---- test actually for real
+
+#define TEST_RAM_BANK   4
+
+
+#define TEST    8
 #define TEST_SIZE   64
 uint16_t test_arr[TEST * TEST_SIZE] = { 0 };
 #define TEST_ADDR_M 0x4B
@@ -50,7 +100,7 @@ void MathTestsinit() {
     }
     vera->DATA0 = 0;
     //set high ram
-    SET_RAM_BANK(1);
+    x16_ram_bank = TEST_RAM_BANK;
     for (i = 0; i < RAM_BANK_SIZE; i++) {
         HIGH_RAM_8(i) = (uint8_t)i;
         if ((uint8_t)i == 0) { HIGH_RAM_8(i) = 1; }
@@ -74,7 +124,7 @@ void MathTest(_eMathTest t) {
         // does nothing, just to measure baseline lag of everything else
         break;
     case MATH_TEST_FOR:
-        SET_RAM_BANK(1);
+        x16_ram_bank = TEST_RAM_BANK;
         for (j = 0; j < TEST; j++) {
             for (i = 0; i < TEST_SIZE; i++) {
                 //vera->DATA0 = HIGH_RAM_16(i) + (int8_t)HIGH_RAM_8(i + 0x1000);
@@ -86,7 +136,7 @@ void MathTest(_eMathTest t) {
         break;
 
     case MATH_TEST_WHILE:
-        SET_RAM_BANK(1);
+        x16_ram_bank = TEST_RAM_BANK;
         for (j = 0; j < TEST; j++) {
             HIGH_RAM_16(TEST_SIZE) = 0;
             i = 0;
@@ -138,6 +188,33 @@ void MathTest(_eMathTest t) {
 
         }
 
+        break;
+
+        // we have doubled perfomance by hardcoding the VERA addresses manually,
+        // instead of a constant pointer to the VERA addresses
+        // you would expect any decent compiler to see a CONSTANT pointer and hard code the addresses instead of shuffling multiple bytes to set up a pointer...
+    case MATH_TEST_VERA_BETTER_WRITE:
+
+        VERA_CTRL = 1;
+        VERA_ADDRx_H = ADDR_INC_1;
+
+        for (j = 0; j < TEST; j++) {
+
+            VERA_ADDRx_M = TEST_ADDR_M;
+            VERA_ADDRx_L = 0;
+            //i = 0;
+
+            w.u8_h = VERA_DATA1;
+            while (w.u8_h != 0) {
+                w.u8_l = VERA_DATA1;
+                w.u16 += (int8_t)VERA_DATA1; // comment this line out for 8 bit second number
+                //vera->DATA0 = w.u16 + (int8_t)vera->DATA1; //also 16 bit version
+                VERA_DATA0 = w.u8_h + (int8_t)VERA_DATA1;
+                VERA_DATA0 = w.u8_l;
+                w.u8_h = VERA_DATA1;
+                //i++;
+            }
+        }
         break;
 
         // same as MATH_TEST_VERA_UNTIL0 but translated to assembly

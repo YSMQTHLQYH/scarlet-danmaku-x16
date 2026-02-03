@@ -5,8 +5,9 @@
 static uint8_t a0, a1, a2;
 
 //  ---- memory
-volatile uint8_t* const ram_bank = (uint8_t*)0x0000;
-volatile uint8_t* const rom_bank = (uint8_t*)0x0001;
+// defined in asm now (i hope)
+//volatile uint8_t* const ram_bank = (uint8_t*)0x0000;
+//volatile uint8_t* const rom_bank = (uint8_t*)0x0001;
 
 
 //  ---- IRQ
@@ -25,7 +26,8 @@ void* IrqGetVector() {
 }
 
 //   ---- VERA
-volatile _sVeraReg* const vera = (void*)0x9F20;
+// doing it like this was bad duz compiler dumb
+//volatile _sVeraReg* const vera = (void*)0x9F20;
 
 uint16_t VeraGetScanline() {
     _uConv16 sl;
