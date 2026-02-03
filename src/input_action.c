@@ -105,14 +105,14 @@ void JoystickDrawToBitmap(uint8_t joystick_n, uint8_t buffer_n, uint8_t x, uint8
 	// setup vera
 	VERA_CTRL = 0;
 	VERA_ADDRx_H = buffer_n | ADDR_INC_1;
-	addr.u8_h = MEM_BITMAP_1_ADDR_M;
-	addr.u8_l = x;
-	addr.u16 += lookup_bitmap_y[y];
+	addr.h = MEM_BITMAP_1_ADDR_M;
+	addr.l = x;
+	addr.w += lookup_bitmap_y[y];
 
 	// -- draw
 	// L and R
-	VERA_ADDRx_M = addr.u8_h;
-	VERA_ADDRx_L = addr.u8_l;
+	VERA_ADDRx_M = addr.h;
+	VERA_ADDRx_L = addr.l;
 	VERA_DATA0 = c[8];
 	VERA_DATA0 = c[8];
 	VERA_DATA0 = c[8];
@@ -123,18 +123,18 @@ void JoystickDrawToBitmap(uint8_t joystick_n, uint8_t buffer_n, uint8_t x, uint8
 	VERA_DATA0 = c[9];
 
 	// top row (UP and X)
-	addr.u16 += 161;
-	VERA_ADDRx_M = addr.u8_h;
-	VERA_ADDRx_L = addr.u8_l;
+	addr.w += 161;
+	VERA_ADDRx_M = addr.h;
+	VERA_ADDRx_L = addr.l;
 	VERA_DATA0 = c[0];
 	VERA_DATA0 = 0;
 	VERA_DATA0 = 0;
 	VERA_DATA0 = 0;
 	VERA_DATA0 = 0;
 	VERA_DATA0 = c[6];
-	addr.u16 += 80;
-	VERA_ADDRx_M = addr.u8_h;
-	VERA_ADDRx_L = addr.u8_l;
+	addr.w += 80;
+	VERA_ADDRx_M = addr.h;
+	VERA_ADDRx_L = addr.l;
 	VERA_DATA0 = c[0];
 	VERA_DATA0 = 0;
 	VERA_DATA0 = 0;
@@ -143,9 +143,9 @@ void JoystickDrawToBitmap(uint8_t joystick_n, uint8_t buffer_n, uint8_t x, uint8
 	VERA_DATA0 = c[6];
 
 	// middle row (LEFT, RIGHT, SELECT, START, Y, A)
-	addr.u16 += 159;
-	VERA_ADDRx_M = addr.u8_h;
-	VERA_ADDRx_L = addr.u8_l;
+	addr.w += 159;
+	VERA_ADDRx_M = addr.h;
+	VERA_ADDRx_L = addr.l;
 	VERA_DATA0 = c[2];
 	VERA_DATA0 = 0;
 	VERA_DATA0 = c[3];
@@ -154,9 +154,9 @@ void JoystickDrawToBitmap(uint8_t joystick_n, uint8_t buffer_n, uint8_t x, uint8
 	VERA_DATA0 = c[7];
 	VERA_DATA0 = 0;
 	VERA_DATA0 = c[4];
-	addr.u16 += 80;
-	VERA_ADDRx_M = addr.u8_h;
-	VERA_ADDRx_L = addr.u8_l;
+	addr.w += 80;
+	VERA_ADDRx_M = addr.h;
+	VERA_ADDRx_L = addr.l;
 	VERA_DATA0 = c[2];
 	VERA_DATA0 = 0;
 	VERA_DATA0 = c[3];
@@ -167,18 +167,18 @@ void JoystickDrawToBitmap(uint8_t joystick_n, uint8_t buffer_n, uint8_t x, uint8
 	VERA_DATA0 = c[4];
 
 	// bottom row (DOWN, SELECT, START, B)
-	addr.u16 += 161;
-	VERA_ADDRx_M = addr.u8_h;
-	VERA_ADDRx_L = addr.u8_l;
+	addr.w += 161;
+	VERA_ADDRx_M = addr.h;
+	VERA_ADDRx_L = addr.l;
 	VERA_DATA0 = c[1];
 	VERA_DATA0 = 0;
 	VERA_DATA0 = c[11];
 	VERA_DATA0 = c[10];
 	VERA_DATA0 = 0;
 	VERA_DATA0 = c[5];
-	addr.u16 += 80;
-	VERA_ADDRx_M = addr.u8_h;
-	VERA_ADDRx_L = addr.u8_l;
+	addr.w += 80;
+	VERA_ADDRx_M = addr.h;
+	VERA_ADDRx_L = addr.l;
 	VERA_DATA0 = c[1];
 	VERA_DATA0 = 0;
 	VERA_DATA0 = c[11];
@@ -187,9 +187,9 @@ void JoystickDrawToBitmap(uint8_t joystick_n, uint8_t buffer_n, uint8_t x, uint8
 	VERA_DATA0 = c[5];
 
 	// middle slice of SELECT and START
-	addr.u16 -= 158;
-	VERA_ADDRx_M = addr.u8_h;
-	VERA_ADDRx_L = addr.u8_l;
+	addr.w -= 158;
+	VERA_ADDRx_M = addr.h;
+	VERA_ADDRx_L = addr.l;
 	VERA_DATA0 = c[11];
 	VERA_DATA0 = c[10];
 }
@@ -200,9 +200,9 @@ void InputActionDrawToBitmap(uint8_t buffer_n, uint8_t x, uint8_t y) {
 	// setup vera
 	VERA_CTRL = 0;
 	VERA_ADDRx_H = buffer_n | ADDR_INC_80;
-	addr.u8_h = MEM_BITMAP_1_ADDR_M;
-	addr.u8_l = x;
-	addr.u16 += lookup_bitmap_y[y];
+	addr.h = MEM_BITMAP_1_ADDR_M;
+	addr.l = x;
+	addr.w += lookup_bitmap_y[y];
 
 	for (i = 0; i < ACTION_ID_COUNT; i++) {
 		// read input
@@ -212,13 +212,13 @@ void InputActionDrawToBitmap(uint8_t buffer_n, uint8_t x, uint8_t y) {
 			FILL_IF_PRESSED_FULL(IsActionPressed(i), c);
 		}
 		// draw
-		VERA_ADDRx_M = addr.u8_h;
-		VERA_ADDRx_L = addr.u8_l;
+		VERA_ADDRx_M = addr.h;
+		VERA_ADDRx_L = addr.l;
 		VERA_DATA0 = c;
 		VERA_DATA0 = c;
 		VERA_DATA0 = c;
 		VERA_DATA0 = c;
-		addr.u16 += 2;
+		addr.w += 2;
 	}
 
 }

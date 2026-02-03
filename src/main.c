@@ -23,11 +23,11 @@ void test_sprite() {
     _uConv16 addr;
     _sFileLoadCtx pl = { 0 };
     // fill sprite graphics
-    addr.u16 = MEM_VRAM_0_UNUSED_2_START;
+    addr.w = MEM_VRAM_0_UNUSED_2_START;
     VERA_CTRL = 0;
     VERA_ADDRx_H = 0x10;
-    VERA_ADDRx_M = addr.u8_h;
-    VERA_ADDRx_L = addr.u8_l;
+    VERA_ADDRx_M = addr.h;
+    VERA_ADDRx_L = addr.l;
 
     if (b == 0) {
         b = 1;
@@ -58,19 +58,19 @@ void test_sprite() {
     }
 
     // set up hardware sprite
-    addr.u16 = MEM_VRAM_1_VERA_SPRITE_ATTR_START;
+    addr.w = MEM_VRAM_1_VERA_SPRITE_ATTR_START;
     VERA_ADDRx_H = 0x11;
-    VERA_ADDRx_M = addr.u8_h;
-    VERA_ADDRx_L = addr.u8_l;
+    VERA_ADDRx_M = addr.h;
+    VERA_ADDRx_L = addr.l;
     // sprite "player"
     if (IsActionPressed(ACTION_LEFT))x--;
     if (IsActionPressed(ACTION_RIGHT))x++;
     if (IsActionPressed(ACTION_UP))y--;
     if (IsActionPressed(ACTION_DOWN))y++;
-    addr.u16 = MEM_VRAM_1_KERNAL_CHARSET_START >> 5;
-    addr.u8_h |= 0x08; // addr bit 16
-    VERA_DATA0 = addr.u8_l; // addr 12-5
-    VERA_DATA0 = addr.u8_h | 0x00; // addr 16-13 (and mode)
+    addr.w = MEM_VRAM_1_KERNAL_CHARSET_START >> 5;
+    addr.h |= 0x08; // addr bit 16
+    VERA_DATA0 = addr.l; // addr 12-5
+    VERA_DATA0 = addr.h | 0x00; // addr 16-13 (and mode)
     VERA_DATA0 = x;//x
     VERA_DATA0 = 0;
     VERA_DATA0 = y;//y
@@ -79,9 +79,9 @@ void test_sprite() {
     VERA_DATA0 = 0xAF;//size, palete
 
     // sprite 64x64
-    addr.u16 = MEM_VRAM_0_UNUSED_2_START >> 5;
-    VERA_DATA0 = addr.u8_l; // addr 12-5
-    VERA_DATA0 = addr.u8_h | 0x80; // addr 16-13 (and mode)
+    addr.w = MEM_VRAM_0_UNUSED_2_START >> 5;
+    VERA_DATA0 = addr.l; // addr 12-5
+    VERA_DATA0 = addr.h | 0x80; // addr 16-13 (and mode)
     VERA_DATA0 = 0x10;//x
     VERA_DATA0 = 0;
     VERA_DATA0 = 0x10;//y
@@ -90,8 +90,8 @@ void test_sprite() {
     VERA_DATA0 = 0xF0;//size, palete
 
     // sprite 32x32
-    VERA_DATA0 = addr.u8_l; // addr 12-5
-    VERA_DATA0 = addr.u8_h | 0x80; // addr 16-13
+    VERA_DATA0 = addr.l; // addr 12-5
+    VERA_DATA0 = addr.h | 0x80; // addr 16-13
     VERA_DATA0 = 0x10;//x
     VERA_DATA0 = 0;
     VERA_DATA0 = 0x60;//y
@@ -99,9 +99,9 @@ void test_sprite() {
     VERA_DATA0 = 0x0C;//z, flip
     VERA_DATA0 = 0xA0;//size, palete
     // sprite 16x16
-    //addr.u16 += (128 >> 5);
-    VERA_DATA0 = addr.u8_l; // addr 12-5
-    VERA_DATA0 = addr.u8_h | 0x80; // addr 16-13
+    //addr.w += (128 >> 5);
+    VERA_DATA0 = addr.l; // addr 12-5
+    VERA_DATA0 = addr.h | 0x80; // addr 16-13
     VERA_DATA0 = 0x40;//x
     VERA_DATA0 = 0;
     VERA_DATA0 = 0x60;//y
@@ -109,8 +109,8 @@ void test_sprite() {
     VERA_DATA0 = 0x0C;//z, flip
     VERA_DATA0 = 0x50;//size, palete
     // sprite 8x8
-    VERA_DATA0 = addr.u8_l; // addr 12-5
-    VERA_DATA0 = addr.u8_h | 0x80; // addr 16-13
+    VERA_DATA0 = addr.l; // addr 12-5
+    VERA_DATA0 = addr.h | 0x80; // addr 16-13
     VERA_DATA0 = 0x60;//x
     VERA_DATA0 = 0;
     VERA_DATA0 = 0x60;//y
@@ -120,11 +120,11 @@ void test_sprite() {
 
 
     // sprite programmerart
-    addr.u16 = (MEM_VRAM_0_UNUSED_2_START + 4096);
-    addr.u16 += ((frame++ >> 3) << 8);
-    addr.u16 >>= 5;
-    VERA_DATA0 = addr.u8_l; // addr 12-5
-    VERA_DATA0 = addr.u8_h | 0x80; // addr 16-13
+    addr.w = (MEM_VRAM_0_UNUSED_2_START + 4096);
+    addr.w += ((frame++ >> 3) << 8);
+    addr.w >>= 5;
+    VERA_DATA0 = addr.l; // addr 12-5
+    VERA_DATA0 = addr.h | 0x80; // addr 16-13
     VERA_DATA0 = 0x20;//x
     VERA_DATA0 = 0;
     VERA_DATA0 = 0x100;//y
@@ -328,8 +328,8 @@ static void PrintPrevProfBlock() {
     uint8_t i, x, a;
     _uConv16 t;
     for (i = 0; i < profiler_previous_segment_count; i++) {
-        t.u16 = profiler_segment_previous[i];
-        if (t.u8_h == 0) {
+        t.w = profiler_segment_previous[i];
+        if (t.h == 0) {
             // skips the top two digits if they are 0
             a = 2;
             x = 16;
@@ -337,7 +337,7 @@ static void PrintPrevProfBlock() {
             a = 0;
             x = 0;
         }
-        StrUint16Hex(t.u16, &prf_str[0]);
+        StrUint16Hex(t.w, &prf_str[0]);
         PrintSpriteStr(&prf_str[a], i + 3, 272 + x, 100 + (i << 3), 0);
         //Print2BppBitmapStr(prf_str, bitmap_front_buffer, 62, 170 + (i << 3));
     }

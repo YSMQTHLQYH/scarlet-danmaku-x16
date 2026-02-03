@@ -44,9 +44,9 @@ uint16_t VeraGetScanline() {
     asm("lda #01");
 get_scanline_end:
     asm("sta %v", a1);
-    sl.u8_l = a0;
-    sl.u8_h = a1;
-    return sl.u16;
+    sl.l = a0;
+    sl.h = a1;
+    return sl.w;
 }
 
 
@@ -103,9 +103,9 @@ uint8_t KernalJoystickGet(uint8_t joystick_n, uint8_t* mask_0, uint8_t* mask_1) 
 uint8_t load_file(_sFileLoadCtx* ctx) {
     // file name
     _uConv16 w;
-    w.u16 = (uint16_t)ctx->filename;
-    a0 = w.u8_l;
-    a1 = w.u8_h;
+    w.w = (uint16_t)ctx->filename;
+    a0 = w.l;
+    a1 = w.h;
     a2 = ctx->name_lenght;
 
     asm("ldx %v", a0);
@@ -121,9 +121,9 @@ uint8_t load_file(_sFileLoadCtx* ctx) {
     asm("jsr %w", KERNAL_SETLFS);
 
     // load file
-    w.u16 = (uint16_t)ctx->dest_addr;
-    a0 = w.u8_l;
-    a1 = w.u8_h;
+    w.w = (uint16_t)ctx->dest_addr;
+    a0 = w.l;
+    a1 = w.h;
     a2 = ctx->target_mode;
     asm("ldx %v", a0);
     asm("ldy %v", a1);
@@ -138,9 +138,9 @@ uint8_t load_file(_sFileLoadCtx* ctx) {
     // no error, file loaded successfully
     asm("stx %v", a0);
     asm("sty %v", a1);
-    w.u8_l = a0;
-    w.u8_h = a1;
-    ctx->file_end = (void*)w.u16;
+    w.l = a0;
+    w.h = a1;
+    ctx->file_end = (void*)w.w;
 
     return 1;
 jmp_load_error:

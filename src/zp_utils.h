@@ -8,8 +8,8 @@
 #include "memory_map.h"
 
 typedef union {
-    struct { uint8_t u8_l; uint8_t u8_h; };
-    uint16_t u16;
+    struct { uint8_t l; uint8_t h; };
+    uint16_t w;
 } _uConv16;
 
 

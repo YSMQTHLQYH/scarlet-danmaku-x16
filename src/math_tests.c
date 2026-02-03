@@ -14,11 +14,11 @@
 #define REPEAT_N(n, a)  REPEAT##n(a, 0)
 
 // _uConv16 w has to exist in scope for this btw
-#define VERA_TEST_REPEAT(i)    w.u8_h = vera->DATA1;\
-        w.u8_l = vera->DATA1;\
-        w.u16 += (int8_t)vera->DATA1;\
-        vera->DATA0 = w.u8_h + (int8_t)vera->DATA1;\
-        vera->DATA0 = w.u8_l;\
+#define VERA_TEST_REPEAT(i)    w.h = vera->DATA1;\
+        w.l = vera->DATA1;\
+        w.w += (int8_t)vera->DATA1;\
+        vera->DATA0 = w.h + (int8_t)vera->DATA1;\
+        vera->DATA0 = w.l;\
 // comment "w.u16 += (int8_t)vera->DATA1;\" line out for 8 bit second number
 
 
@@ -161,14 +161,14 @@ void MathTest(_eMathTest t) {
             vera->ADDRx_L = 0;
             //i = 0;
 
-            w.u8_h = vera->DATA1;
-            while (w.u8_h != 0) {
-                w.u8_l = vera->DATA1;
-                w.u16 += (int8_t)vera->DATA1; // comment this line out for 8 bit second number
+            w.h = vera->DATA1;
+            while (w.h != 0) {
+                w.l = vera->DATA1;
+                w.w += (int8_t)vera->DATA1; // comment this line out for 8 bit second number
                 //vera->DATA0 = w.u16 + (int8_t)vera->DATA1; //also 16 bit version
-                vera->DATA0 = w.u8_h + (int8_t)vera->DATA1;
-                vera->DATA0 = w.u8_l;
-                w.u8_h = vera->DATA1;
+                vera->DATA0 = w.h + (int8_t)vera->DATA1;
+                vera->DATA0 = w.l;
+                w.h = vera->DATA1;
                 //i++;
             }
         }
@@ -204,14 +204,14 @@ void MathTest(_eMathTest t) {
             VERA_ADDRx_L = 0;
             //i = 0;
 
-            w.u8_h = VERA_DATA1;
-            while (w.u8_h != 0) {
-                w.u8_l = VERA_DATA1;
-                w.u16 += (int8_t)VERA_DATA1; // comment this line out for 8 bit second number
-                //vera->DATA0 = w.u16 + (int8_t)vera->DATA1; //also 16 bit version
-                VERA_DATA0 = w.u8_h + (int8_t)VERA_DATA1;
-                VERA_DATA0 = w.u8_l;
-                w.u8_h = VERA_DATA1;
+            w.h = VERA_DATA1;
+            while (w.h != 0) {
+                w.l = VERA_DATA1;
+                w.w += (int8_t)VERA_DATA1; // comment this line out for 8 bit second number
+                //vera->DATA0 = w.w + (int8_t)vera->DATA1; //also 16 bit version
+                VERA_DATA0 = w.h + (int8_t)VERA_DATA1;
+                VERA_DATA0 = w.l;
+                w.h = VERA_DATA1;
                 //i++;
             }
         }

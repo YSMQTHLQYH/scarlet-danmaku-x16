@@ -77,18 +77,18 @@ void BitmapFillRect(uint8_t buffer_n, uint8_t color, uint8_t x, uint8_t y, uint8
 
     VERA_CTRL = 0;
     VERA_ADDRx_H = (buffer_n & 1) | ADDR_INC_1;
-    addr.u8_l = x;
-    addr.u8_h = MEM_BITMAP_1_ADDR_M;
-    addr.u16 += lookup_bitmap_y[y];
-    VERA_ADDRx_M = addr.u8_h;
-    VERA_ADDRx_L = addr.u8_l;
+    addr.l = x;
+    addr.h = MEM_BITMAP_1_ADDR_M;
+    addr.w += lookup_bitmap_y[y];
+    VERA_ADDRx_M = addr.h;
+    VERA_ADDRx_L = addr.l;
 
     for (j = 0; j < h; j++) {
         for (i = 0; i < w; i++) {
             VERA_DATA0 = c;
         }
-        addr.u16 += 80;
-        VERA_ADDRx_M = addr.u8_h;
-        VERA_ADDRx_L = addr.u8_l;
+        addr.w += 80;
+        VERA_ADDRx_M = addr.h;
+        VERA_ADDRx_L = addr.l;
     }
 }
