@@ -217,6 +217,32 @@ void MathTest(_eMathTest t) {
         }
         break;
 
+        // same as above but stores 16-bit values in zero page
+        // went from 0xEB to 0x87 (235 to 135) about 1.7 times faster
+    case MATH_TEST_VERA_BETTER_WRITE_ZP:
+
+        VERA_CTRL = 1;
+        VERA_ADDRx_H = ADDR_INC_1;
+
+        for (j = 0; j < TEST; j++) {
+
+            VERA_ADDRx_M = TEST_ADDR_M;
+            VERA_ADDRx_L = 0;
+            //i = 0;
+
+            zpc0.h = VERA_DATA1;
+            while (zpc0.h != 0) {
+                zpc0.l = VERA_DATA1;
+                zpc0.w += (int8_t)VERA_DATA1; // comment this line out for 8 bit second number
+                //vera->DATA0 = zpc0.w + (int8_t)VERA_DATA1; //also 16 bit version
+                VERA_DATA0 = zpc0.h + (int8_t)VERA_DATA1;
+                VERA_DATA0 = zpc0.l;
+                zpc0.h = VERA_DATA1;
+                //i++;
+            }
+        }
+        break;
+
         // same as MATH_TEST_VERA_UNTIL0 but translated to assembly
         // lMFAO this is ~7 times faster, cc65 you kinda dumb
     case MATH_TEST_VERA_UNTIL0_ASM:

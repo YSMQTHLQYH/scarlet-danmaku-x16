@@ -12,10 +12,47 @@ typedef union {
     uint16_t w;
 } _uConv16;
 
+//  ---- actual zero page scratch variables
+//  function calls might change the values stored here!
+extern uint8_t zpa0;
+extern uint8_t zpa1;
+extern uint8_t zpa2;
+extern uint8_t zpa3;
+extern uint8_t zpa4;
+extern uint8_t zpa5;
+extern uint8_t zpa6;
+#pragma zpsym ("zpa0");
+#pragma zpsym ("zpa1");
+#pragma zpsym ("zpa2");
+#pragma zpsym ("zpa3");
+#pragma zpsym ("zpa4");
+#pragma zpsym ("zpa5");
+#pragma zpsym ("zpa6");
+
+extern _uConv16 zpc0;
+extern _uConv16 zpc1;
+extern _uConv16 zpc2;
+extern _uConv16 zpc3;
+#pragma zpsym ("zpc0");
+#pragma zpsym ("zpc1");
+#pragma zpsym ("zpc2");
+#pragma zpsym ("zpc3");
+
+extern void* zptr0;
+extern void* zptr1;
+extern void* zptr2;
+extern void* zptr3;
+#pragma zpsym ("zptr0");
+#pragma zpsym ("zptr1");
+#pragma zpsym ("zptr2");
+#pragma zpsym ("zptr3");
+
+
+
+//  ---- function that do lower level stuff
 
 // custom IRQ and it's things
 void CustomIrq();
-
 
 // for extending the default irq handler instead of replacing it
 // make sure this has been set to something before setting CustomIrq as the interrupt handler

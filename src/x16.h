@@ -70,8 +70,8 @@ uint8_t load_file(_sFileLoadCtx* ctx);
 
 // prefixing these with x16 because these feel too powerful to just be a simple variable
 extern volatile uint8_t x16_ram_bank;
-#pragma zpsym ("x16_ram_bank");
 extern volatile uint8_t x16_rom_bank;
+#pragma zpsym ("x16_ram_bank");
 #pragma zpsym ("x16_rom_bank");
 
 //  ---- IRQ
