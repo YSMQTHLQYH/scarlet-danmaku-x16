@@ -1,9 +1,9 @@
+.segment "ZEROPAGE": zeropage
 .exportzp _x16_ram_bank, _x16_rom_bank
 
 _x16_ram_bank = ram_bank
 _x16_rom_bank = rom_bank
 
-.segment "ZEROPAGE": zeropage
 .org $00
 ram_bank: .res 1
 rom_bank: .res 1
@@ -141,3 +141,30 @@ VERA_AUDIO_DATA:    .res 1
 VERA_SPI_DATA:      .res 1
 VERA_SPI_CTRL:      .res 1
 
+.export VERA_ADDR_INC_0, VERA_ADDR_INC_1, VERA_ADDR_INC_2, VERA_ADDR_INC_4
+.export VERA_ADDR_INC_8, VERA_ADDR_INC_16, VERA_ADDR_INC_32, VERA_ADDR_INC_64
+.export VERA_ADDR_INC_128, VERA_ADDR_INC_256, VERA_ADDR_INC_512
+.export VERA_ADDR_INC_40, VERA_ADDR_INC_80, VERA_ADDR_INC_160
+.export VERA_ADDR_INC_320, VERA_ADDR_INC_640
+VERA_ADDR_INC_0 = (0 << 4)
+VERA_ADDR_INC_1 = (1 << 4)
+VERA_ADDR_INC_2 = (2 << 4)
+VERA_ADDR_INC_4 = (3 << 4)
+VERA_ADDR_INC_8 = (4 << 4)
+VERA_ADDR_INC_16 = (5 << 4)
+VERA_ADDR_INC_32 = (6 << 4)
+VERA_ADDR_INC_64 = (7 << 4)
+VERA_ADDR_INC_128 = (8 << 4)
+VERA_ADDR_INC_256 = (9 << 4)
+VERA_ADDR_INC_512 = (10 << 4)
+VERA_ADDR_INC_40 = (11 << 4)
+VERA_ADDR_INC_80 = (12 << 4)
+VERA_ADDR_INC_160 = (13 << 4)
+VERA_ADDR_INC_320 = (14 << 4)
+VERA_ADDR_INC_640 = (15 << 4)
+
+
+
+.segment "CODE": absolute
+.export HIGH_RAM_START
+HIGH_RAM_START = $A000

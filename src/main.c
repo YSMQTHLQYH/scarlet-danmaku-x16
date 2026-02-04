@@ -22,6 +22,7 @@ void test_sprite() {
     uint16_t i;
     _uConv16 addr;
     _sFileLoadCtx pl = { 0 };
+    x16_ram_bank = MEM_BANK_SPRITE_TABLE;
     // fill sprite graphics
     addr.w = MEM_VRAM_0_UNUSED_2_START;
     VERA_CTRL = 0;
@@ -69,14 +70,22 @@ void test_sprite() {
     if (IsActionPressed(ACTION_DOWN))y++;
     addr.w = MEM_VRAM_1_KERNAL_CHARSET_START >> 5;
     addr.h |= 0x08; // addr bit 16
-    VERA_DATA0 = addr.l; // addr 12-5
-    VERA_DATA0 = addr.h | 0x00; // addr 16-13 (and mode)
-    VERA_DATA0 = x;//x
-    VERA_DATA0 = 0;
-    VERA_DATA0 = y;//y
-    VERA_DATA0 = 0;
-    VERA_DATA0 = 0x0C;//z, flip
-    VERA_DATA0 = 0xAF;//size, palete
+    sprite_attr_addr_l[10] = addr.l; // addr 12-5
+    sprite_attr_addr_h[10] = addr.h | 0x00; // addr 16-13 (and mode)
+    sprite_attr_x[10] = x;//x
+    sprite_attr_x_h[10] = 0;
+    sprite_attr_y[10] = y;//y
+    //sprite_attr_y_h[10] = 0;
+    sprite_attr_z_flip[10] = 0x0C;//z, flip
+    spirte_attr_size_palette[10] = 0xAF;//size, palete
+    SpriteManagerNotifyChanged((0 << 8) | 10);
+    SpriteManagerNotifyChanged((1 << 8) | 10);
+    SpriteManagerNotifyChanged((2 << 8) | 10);
+    SpriteManagerNotifyChanged((3 << 8) | 10);
+    SpriteManagerNotifyChanged((4 << 8) | 10);
+    SpriteManagerNotifyChanged((6 << 8) | 10);
+    SpriteManagerNotifyChanged((7 << 8) | 10);
+    //EMU_DEBUG_1(sprite_attr_z_flip[10]);
 
     // sprite 64x64
     addr.w = MEM_VRAM_0_UNUSED_2_START >> 5;
@@ -132,8 +141,6 @@ void test_sprite() {
     VERA_DATA0 = 0x0C;//z, flip
     VERA_DATA0 = 0x50;//size, palete
 
-
-    SpriteManagerNotifyChanged((SPRITE_ATTR_ADDR_H << 8) | x);
     return;
 
 
@@ -253,6 +260,7 @@ void main() {
         ProfilerEndSegment();
 
         // segment 3: placeholder dummy
+        SpriteManagerWriteChanges();
         ProfilerEndSegment();
 
         // segment 4: math
