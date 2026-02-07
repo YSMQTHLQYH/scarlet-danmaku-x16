@@ -120,11 +120,8 @@ sprite_attr_highest_changed: .res 8, $00
 
 @skip:
     ; add to pointer for next iteration
-    lda _zptr0
-    clc
-    adc #MAX_SPRITES
-    sta _zptr0
-    bcc @no_clear
+    ;skipping from $A080 to $A100, makes writting faster at the cost of using more memory
+    ; basically pretending we have up to 256 sprites
     inc _zptr0 + 1
 @no_clear:
     ; iteration count

@@ -189,6 +189,38 @@ best option is more of those 64x64 sprites (2KB each :/)
 actually this can be shared with the regular enemy sprites (we don't need both at the same time)
 */
 
+/*
+even more hypothetical 240x320 4bpp mode (so we can have vertical monitors)
+frame buffers are still using 0x0000 to 0x95FF, BUT we can't repurpose any of it now (75KB in total)
+(though we can actually render the GUI on the bitmap layer) 2KB saved i guess
+the 0x9600 to 0xA000 area is actually usable like normal, 2.5KB more
+we still need to find room for at least 32 bullet blocks (256 bytes each), at least 8KB
+remember that we also need room for a full font (8KB)
+we could only include half a font (non standard charset?) and leave room for 48 blocks of bullets (16KB)
+the absolute minimun text we need is 26 letters + 10 digits, the 0x9600-0xA000 area has room for 80. really awkward charset but it's good enough
+
+lets say we do that on one bank and on the other we leave room for some interrupt effect
+46.5KB in total
+8-16KB for the bullet data
+8KB per sprite sheet (we need at least 2, probably no more than 4)
+the actual bullet graphics to copy paste (16 bytes? per graphic), 1 or 2 KB should be fine
+12KB for two portraits
+uh total
+12+12+24 and we are already over budget...
+if we use 128x64 portraits we save 4KB, if we instead code it such that there's only one portrait at a time we save 6KB instead
+we can barely fit that way (12+6+24 = 42KB, absolute minimum tilemap is 2+2KB)
+we will probably need to stream the graphics for the player animations though...
+also a second byte for the y position... and somehow adjust the level design to work at both 256x240 and 240x320...
+
+oh yeah having the level design work at different resolution
+working the game logic in some "world space coordiantes" and have a scaling factor is not happening
+we can store all level data (starting positions and speeds) in one of the two resolutions and scale before starting
+that would mean having two versions of everyhing...
+even if we survive the spaghetti from that we will still have a different sized hitbox!
+alternatively, have the game run at 240x320 and cut off the top section of the screen in horizontal mode...
+I suppose we could always have the game area in 240x240 and just move around the GUI but at that point why bother with vertical monitors
+idk fam, this sounds like a bad idea from game balance pov
+*/
 
 /*    BANKED RAM START     */
 #define MEM_BANK_SPRITE_TABLE   2

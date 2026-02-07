@@ -17,7 +17,8 @@
 
 
 void test_sprite() {
-    static uint8_t x = 100, y = 100, b = 0, frame = 0;
+    static uint16_t x = 100, y = 100;
+    static uint8_t b = 0, frame = 0, p_obj = 0;
     uint8_t j, c;
     uint16_t i;
     _uConv16 addr;
@@ -56,7 +57,21 @@ void test_sprite() {
             EMU_DEBUG_1(0xFA);
             EMU_DEBUG_1(pl.error_code);
         }
+
+        p_obj = SpriteObjectCreate(SM_PRIORITY_HIGH, 1, 1, 0b1010);
+        addr.w = MEM_VRAM_1_KERNAL_CHARSET_START >> 5;
+        addr.h |= 0x08; // addr bit 16
+        SpriteObjectSetAddr(p_obj, addr.h | 0x00, &addr.l);
+        SpriteObjectSetZFlip(p_obj, 0x0C);
+        SpriteObjectSetSizePalette(p_obj, 0b1010, 15);
+
     }
+    if (IsActionPressed(ACTION_LEFT))x--;
+    if (IsActionPressed(ACTION_RIGHT))x++;
+    if (IsActionPressed(ACTION_UP))y--;
+    if (IsActionPressed(ACTION_DOWN))y++;
+    SpriteObjectSetPosition(p_obj, x, y);
+
 
     // set up hardware sprite
     addr.w = MEM_VRAM_1_VERA_SPRITE_ATTR_START;
@@ -64,28 +79,7 @@ void test_sprite() {
     VERA_ADDRx_M = addr.h;
     VERA_ADDRx_L = addr.l;
     // sprite "player"
-    if (IsActionPressed(ACTION_LEFT))x--;
-    if (IsActionPressed(ACTION_RIGHT))x++;
-    if (IsActionPressed(ACTION_UP))y--;
-    if (IsActionPressed(ACTION_DOWN))y++;
-    addr.w = MEM_VRAM_1_KERNAL_CHARSET_START >> 5;
-    addr.h |= 0x08; // addr bit 16
-    sprite_attr_addr_l[10] = addr.l; // addr 12-5
-    sprite_attr_addr_h[10] = addr.h | 0x00; // addr 16-13 (and mode)
-    sprite_attr_x[10] = x;//x
-    sprite_attr_x_h[10] = 0;
-    sprite_attr_y[10] = y;//y
-    //sprite_attr_y_h[10] = 0;
-    sprite_attr_z_flip[10] = 0x0C;//z, flip
-    spirte_attr_size_palette[10] = 0xAF;//size, palete
-    SpriteManagerNotifyChanged((0 << 8) | 10);
-    SpriteManagerNotifyChanged((1 << 8) | 10);
-    SpriteManagerNotifyChanged((2 << 8) | 10);
-    SpriteManagerNotifyChanged((3 << 8) | 10);
-    SpriteManagerNotifyChanged((4 << 8) | 10);
-    SpriteManagerNotifyChanged((6 << 8) | 10);
-    SpriteManagerNotifyChanged((7 << 8) | 10);
-    //EMU_DEBUG_1(sprite_attr_z_flip[10]);
+
 
     // sprite 64x64
     addr.w = MEM_VRAM_0_UNUSED_2_START >> 5;
@@ -318,6 +312,9 @@ static void Init() {
     }
 
     InputActionInit(0);
+
+    //  ---- sprites
+    SpriteManagerInit();
 
     //  ---- graphics
     VERA_CTRL = 0x00;
