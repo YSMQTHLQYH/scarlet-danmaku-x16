@@ -86,146 +86,175 @@ void FreeSpriteObject(uint8_t obj_index) {
 }
 
 void SpriteObjectSetAddr(uint8_t obj_index, uint8_t sheet_n, uint8_t* data) {
-    uint8_t i, j = 0;
+#define I           zpc0.h
+#define TOP_INDEX   zpc0.l
+#define CONV        zpc0
+#define PTR         zptr0
+    //uint8_t i; // using zpc0.h instead of this, we might as well
+    PTR = data;
     if (obj_index >= MAX_SPRITE_OBJECTS) { return; }
     x16_ram_bank = MEM_BANK_SPRITE_TABLE;
-    for (i = sprite_object[obj_index].spr_index; i < sprite_object[obj_index].spr_index + sprite_object[obj_index].count; i++) {
-        sprite_attr_addr_l[i] = data[j++];
-        sprite_attr_addr_h[i] = sheet_n;
+    TOP_INDEX = sprite_object[obj_index].spr_index + sprite_object[obj_index].count; // zpc not meant to be used as two separate varaiables but idc
+    for (I = sprite_object[obj_index].spr_index; I < TOP_INDEX; I++) {
+        sprite_attr_addr_l[I] = *(PTR++);
+        sprite_attr_addr_h[I] = sheet_n;
     }
-    if (i > 1) {
-        zpc0.l = sprite_object[obj_index].spr_index + sprite_object[obj_index].count;
-        zpc0.h = SPRITE_ATTR_ADDR_L;
-        SpriteManagerNotifyChanged(zpc0.w);
-        zpc0.h = SPRITE_ATTR_ADDR_H;
-        SpriteManagerNotifyChanged(zpc0.w);
+    if (I > 1) {
+        //CONV.l = sprite_object[obj_index].spr_index + sprite_object[obj_index].count; // zpc0.l is still this
+        CONV.h = SPRITE_ATTR_ADDR_L;
+        SpriteManagerNotifyChanged(CONV.w);
+        CONV.h = SPRITE_ATTR_ADDR_H;
+        SpriteManagerNotifyChanged(CONV.w);
     }
-    zpc0.l = sprite_object[obj_index].spr_index;
-    zpc0.h = SPRITE_ATTR_ADDR_L;
-    SpriteManagerNotifyChanged(zpc0.w);
-    zpc0.h = SPRITE_ATTR_ADDR_H;
-    SpriteManagerNotifyChanged(zpc0.w);
+    CONV.l = sprite_object[obj_index].spr_index;
+    CONV.h = SPRITE_ATTR_ADDR_L;
+    SpriteManagerNotifyChanged(CONV.w);
+    CONV.h = SPRITE_ATTR_ADDR_H;
+    SpriteManagerNotifyChanged(CONV.w);
+#undef PTR
+#undef CONV
+#undef TOP_INDEX
+#undef I
 }
 
 void SpriteObjectSetPosition(uint8_t obj_index, uint16_t x, uint16_t y) {
-    uint8_t i, j = 0;
+#define CONV_AUX    zpc0
+#define CONV_X      zpc0
+#define CONV_Y      zpc1
+#define SIZE_X      zpa0
+#define SIZE_Y      zpa1
+    uint8_t i, j, top_index;
     if (obj_index >= MAX_SPRITE_OBJECTS) { return; }
-    zpc1.w = y & 0x03FF;
-    zpc0.w = x & 0x03FF;
+    CONV_Y.w = y & 0x03FF;
+    CONV_X.w = x & 0x03FF;
     x16_ram_bank = MEM_BANK_SPRITE_TABLE;
     if (sprite_object[obj_index].count == 1) {
         // make this a separate function ?
         i = sprite_object[obj_index].spr_index;
-        sprite_attr_x[i] = zpc0.l;
-        sprite_attr_x_h[i] = zpc0.h;
-        sprite_attr_y[i] = zpc1.l;
-        sprite_attr_y_h[i] = zpc1.h;
-        zpc0.l = sprite_object[obj_index].spr_index;
-        zpc0.h = SPRITE_ATTR_X_L;
-        SpriteManagerNotifyChanged(zpc0.w);
-        zpc0.h = SPRITE_ATTR_X_H;
-        SpriteManagerNotifyChanged(zpc0.w);
-        zpc0.h = SPRITE_ATTR_Y_L;
-        SpriteManagerNotifyChanged(zpc0.w);
-        zpc0.h = SPRITE_ATTR_Y_H;
-        SpriteManagerNotifyChanged(zpc0.w);
+        sprite_attr_x[i] = CONV_X.l;
+        sprite_attr_x_h[i] = CONV_X.h;
+        sprite_attr_y[i] = CONV_Y.l;
+        sprite_attr_y_h[i] = CONV_Y.h;
+
+        CONV_AUX.l = sprite_object[obj_index].spr_index;
+        CONV_AUX.h = SPRITE_ATTR_X_L;
+        SpriteManagerNotifyChanged(CONV_AUX.w);
+        CONV_AUX.h = SPRITE_ATTR_X_H;
+        SpriteManagerNotifyChanged(CONV_AUX.w);
+        CONV_AUX.h = SPRITE_ATTR_Y_L;
+        SpriteManagerNotifyChanged(CONV_AUX.w);
+        CONV_AUX.h = SPRITE_ATTR_Y_H;
+        SpriteManagerNotifyChanged(CONV_AUX.w);
         return;
     }
     switch (sprite_object[obj_index].spr_size & 0x03) {
     case 3:
-        zpa0 = 64;
+        SIZE_X = 64;
         break;
     case 2:
-        zpa0 = 32;
+        SIZE_X = 32;
         break;
     case 1:
-        zpa0 = 16;
+        SIZE_X = 16;
         break;
     case 0:
     default:
-        zpa0 = 8;
+        SIZE_X = 8;
         break;
     }
     switch ((sprite_object[obj_index].spr_size >> 2) & 0x03) {
     case 3:
-        zpa1 = 64;
+        SIZE_Y = 64;
         break;
     case 2:
-        zpa1 = 32;
+        SIZE_Y = 32;
         break;
     case 1:
-        zpa1 = 16;
+        SIZE_Y = 16;
         break;
     case 0:
     default:
-        zpa1 = 8;
+        SIZE_Y = 8;
         break;
     }
-    for (j = sprite_object[obj_index].spr_index; j < sprite_object[obj_index].spr_index + sprite_object[obj_index].count; j += sprite_object[obj_index].width) {
+    top_index = sprite_object[obj_index].spr_index + sprite_object[obj_index].count;
+    for (j = sprite_object[obj_index].spr_index; j < top_index; j += sprite_object[obj_index].width) {
         for (i = j; i < j + sprite_object[obj_index].width; i++) {
-            sprite_attr_x[i] = zpc0.l;
-            sprite_attr_x_h[i] = zpc0.h;
-            sprite_attr_y[i] = zpc1.l;
-            sprite_attr_y_h[i] = zpc1.h;
-            zpc0.w += zpa0;
+            sprite_attr_x[i] = CONV_X.l;
+            sprite_attr_x_h[i] = CONV_X.h;
+            sprite_attr_y[i] = CONV_Y.l;
+            sprite_attr_y_h[i] = CONV_Y.h;
+            CONV_X.w += SIZE_X;
         }
-        zpc1.w += zpa1;
-        zpc0.w = x;
+        CONV_Y.w += SIZE_Y;
+        CONV_X.w = x;
     }
-    if (sprite_object[obj_index].count > 1) {
-        zpc0.l = sprite_object[obj_index].spr_index + sprite_object[obj_index].count;
-        zpc0.h = SPRITE_ATTR_X_L;
-        SpriteManagerNotifyChanged(zpc0.w);
-        zpc0.h = SPRITE_ATTR_X_H;
-        SpriteManagerNotifyChanged(zpc0.w);
-        zpc0.h = SPRITE_ATTR_Y_L;
-        SpriteManagerNotifyChanged(zpc0.w);
-        zpc0.h = SPRITE_ATTR_Y_H;
-        SpriteManagerNotifyChanged(zpc0.w);
-    }
-    zpc0.l = sprite_object[obj_index].spr_index;
-    zpc0.h = SPRITE_ATTR_X_L;
-    SpriteManagerNotifyChanged(zpc0.w);
-    zpc0.h = SPRITE_ATTR_X_H;
-    SpriteManagerNotifyChanged(zpc0.w);
-    zpc0.h = SPRITE_ATTR_Y_L;
-    SpriteManagerNotifyChanged(zpc0.w);
-    zpc0.h = SPRITE_ATTR_Y_H;
-    SpriteManagerNotifyChanged(zpc0.w);
+    //if (sprite_object[obj_index].count > 1) { // already exited early becasue of this
+    CONV_AUX.l = sprite_object[obj_index].spr_index + sprite_object[obj_index].count;
+    CONV_AUX.h = SPRITE_ATTR_X_L;
+    SpriteManagerNotifyChanged(CONV_AUX.w);
+    CONV_AUX.h = SPRITE_ATTR_X_H;
+    SpriteManagerNotifyChanged(CONV_AUX.w);
+    CONV_AUX.h = SPRITE_ATTR_Y_L;
+    SpriteManagerNotifyChanged(CONV_AUX.w);
+    CONV_AUX.h = SPRITE_ATTR_Y_H;
+    SpriteManagerNotifyChanged(CONV_AUX.w);
+    //}
+
+    CONV_AUX.l = sprite_object[obj_index].spr_index;
+    CONV_AUX.h = SPRITE_ATTR_X_L;
+    SpriteManagerNotifyChanged(CONV_AUX.w);
+    CONV_AUX.h = SPRITE_ATTR_X_H;
+    SpriteManagerNotifyChanged(CONV_AUX.w);
+    CONV_AUX.h = SPRITE_ATTR_Y_L;
+    SpriteManagerNotifyChanged(CONV_AUX.w);
+    CONV_AUX.h = SPRITE_ATTR_Y_H;
+    SpriteManagerNotifyChanged(CONV_AUX.w);
+#undef SIZE_Y
+#undef SIZE_X
+#undef CONV_Y
+#undef CONV_X
+#undef CONV
 }
 
 void SpriteObjectSetZFlip(uint8_t obj_index, uint8_t z) {
-    uint8_t i;
+#define CONV    zpc0
+    uint8_t i, top_index;
     if (obj_index >= MAX_SPRITE_OBJECTS) { return; }
     x16_ram_bank = MEM_BANK_SPRITE_TABLE;
-    for (i = sprite_object[obj_index].spr_index; i < sprite_object[obj_index].spr_index + sprite_object[obj_index].count; i++) {
+    top_index = sprite_object[obj_index].spr_index + sprite_object[obj_index].count;
+    for (i = sprite_object[obj_index].spr_index; i < top_index; i++) {
         sprite_attr_z_flip[i] = z;
     }
-    zpc0.h = SPRITE_ATTR_Z_FLIP;
+    CONV.h = SPRITE_ATTR_Z_FLIP;
     if (i > 1) {
-        zpc0.l = sprite_object[obj_index].spr_index + sprite_object[obj_index].count;
-        SpriteManagerNotifyChanged(zpc0.w);
+        CONV.l = top_index;
+        SpriteManagerNotifyChanged(CONV.w);
     }
-    zpc0.l = sprite_object[obj_index].spr_index;
-    SpriteManagerNotifyChanged(zpc0.w);
+    CONV.l = sprite_object[obj_index].spr_index;
+    SpriteManagerNotifyChanged(CONV.w);
+#undef CONV
 }
 void SpriteObjectSetSizePalette(uint8_t obj_index, uint8_t size, uint8_t palette) {
-    uint8_t i, a;
+#define CONV    zpc0
+    uint8_t i, a, top_index;
     if (obj_index >= MAX_SPRITE_OBJECTS) { return; }
     x16_ram_bank = MEM_BANK_SPRITE_TABLE;
     a = palette & 0x0F;
     sprite_object[obj_index].spr_size = size;
     a += size << 4;
-    for (i = sprite_object[obj_index].spr_index; i < sprite_object[obj_index].spr_index + sprite_object[obj_index].count; i++) {
+    top_index = sprite_object[obj_index].spr_index + sprite_object[obj_index].count;
+    for (i = sprite_object[obj_index].spr_index; i < top_index; i++) {
         sprite_attr_size_palette[i] = a;
     }
-    zpc0.h = SPRITE_ATTR_SIZE_PALETTE;
+    CONV.h = SPRITE_ATTR_SIZE_PALETTE;
     if (i > 1) {
-        zpc0.l = sprite_object[obj_index].spr_index + sprite_object[obj_index].count;
-        SpriteManagerNotifyChanged(zpc0.w);
+        CONV.l = top_index;
+        SpriteManagerNotifyChanged(CONV.w);
     }
-    zpc0.l = sprite_object[obj_index].spr_index;
-    SpriteManagerNotifyChanged(zpc0.w);
+    CONV.l = sprite_object[obj_index].spr_index;
+    SpriteManagerNotifyChanged(CONV.w);
+#undef CONV
 }
 
 //  ---- reserving hardware sprites

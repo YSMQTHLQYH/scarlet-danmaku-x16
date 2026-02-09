@@ -68,7 +68,7 @@ extern _sSpriteObject* sprite_object;
 uint8_t CreateSpriteObject(uint8_t priority, uint8_t count, uint8_t width, uint8_t spr_size);
 void FreeSpriteObject(uint8_t index);
 
-// usues zpc0!
+// usues zpc0 and zptr0!
 // sets the address of graphics data for each sprite
 // data is a pointer the the array of data (left to right, then top to bottom)
 // sheet_n is bits 16 to 13 is address (shared for the entire object), also bit 7 of sheet_n is mode (0 = 4bpp, 1 = 8bpp)

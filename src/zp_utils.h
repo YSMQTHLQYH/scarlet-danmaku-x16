@@ -38,10 +38,10 @@ extern _uConv16 zpc3;
 #pragma zpsym ("zpc2");
 #pragma zpsym ("zpc3");
 
-extern void* zptr0;
-extern void* zptr1;
-extern void* zptr2;
-extern void* zptr3;
+extern uint8_t* zptr0;
+extern uint8_t* zptr1;
+extern uint8_t* zptr2;
+extern uint8_t* zptr3;
 #pragma zpsym ("zptr0");
 #pragma zpsym ("zptr1");
 #pragma zpsym ("zptr2");
