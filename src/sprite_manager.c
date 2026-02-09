@@ -51,7 +51,7 @@ void SpriteManagerInit() {
 
 //  ---- (multi)sprite objects, for things that don't need multiple instances of
 
-uint8_t SpriteObjectCreate(uint8_t priority, uint8_t count, uint8_t width, uint8_t spr_size) {
+uint8_t CreateSpriteObject(uint8_t priority, uint8_t count, uint8_t width, uint8_t spr_size) {
     uint8_t i;
     x16_ram_bank = MEM_BANK_SPRITE_TABLE;
     // search for free object slots
@@ -68,23 +68,26 @@ uint8_t SpriteObjectCreate(uint8_t priority, uint8_t count, uint8_t width, uint8
             sprite_object[i].count = count;
             sprite_object[i].width = width;
             sprite_object[i].spr_size = spr_size;
+            EMU_DEBUG_2(sprite_object[i].spr_index);
             return i;
         }
     }
     // didn't have any object slots free
     return 0xFF;
 }
-void SpriteObjectFree(uint8_t index) {
+void FreeSpriteObject(uint8_t obj_index) {
+    if (obj_index >= MAX_SPRITE_OBJECTS) { return; }
     x16_ram_bank = MEM_BANK_SPRITE_TABLE;
-    SpriteManagerFree(sprite_object[index].count, sprite_object[index].spr_index);
-    sprite_object[index].count = 0;
-    sprite_object[index].width = 0;
-    sprite_object[index].spr_index = 0;
-    sprite_object[index].spr_size = 0;
+    SpriteManagerFree(sprite_object[obj_index].count, sprite_object[obj_index].spr_index);
+    sprite_object[obj_index].count = 0;
+    sprite_object[obj_index].width = 0;
+    sprite_object[obj_index].spr_index = 0;
+    sprite_object[obj_index].spr_size = 0;
 }
 
 void SpriteObjectSetAddr(uint8_t obj_index, uint8_t sheet_n, uint8_t* data) {
     uint8_t i, j = 0;
+    if (obj_index >= MAX_SPRITE_OBJECTS) { return; }
     x16_ram_bank = MEM_BANK_SPRITE_TABLE;
     for (i = sprite_object[obj_index].spr_index; i < sprite_object[obj_index].spr_index + sprite_object[obj_index].count; i++) {
         sprite_attr_addr_l[i] = data[j++];
@@ -105,9 +108,10 @@ void SpriteObjectSetAddr(uint8_t obj_index, uint8_t sheet_n, uint8_t* data) {
 }
 
 void SpriteObjectSetPosition(uint8_t obj_index, uint16_t x, uint16_t y) {
-    uint8_t i, j = 0, h = 0;
+    uint8_t i, j = 0;
+    if (obj_index >= MAX_SPRITE_OBJECTS) { return; }
     zpc1.w = y & 0x03FF;
-    zpc0.w = x & 0x03FF;;
+    zpc0.w = x & 0x03FF;
     x16_ram_bank = MEM_BANK_SPRITE_TABLE;
     if (sprite_object[obj_index].count == 1) {
         // make this a separate function ?
@@ -157,11 +161,7 @@ void SpriteObjectSetPosition(uint8_t obj_index, uint16_t x, uint16_t y) {
         zpa1 = 8;
         break;
     }
-    while (j < sprite_object[obj_index].count) {
-        h++;
-        j += sprite_object[obj_index].width;
-    }
-    for (j = sprite_object[obj_index].spr_index; j < sprite_object[obj_index].spr_index + sprite_object[obj_index].count; j += h) {
+    for (j = sprite_object[obj_index].spr_index; j < sprite_object[obj_index].spr_index + sprite_object[obj_index].count; j += sprite_object[obj_index].width) {
         for (i = j; i < j + sprite_object[obj_index].width; i++) {
             sprite_attr_x[i] = zpc0.l;
             sprite_attr_x_h[i] = zpc0.h;
@@ -196,10 +196,10 @@ void SpriteObjectSetPosition(uint8_t obj_index, uint16_t x, uint16_t y) {
 
 void SpriteObjectSetZFlip(uint8_t obj_index, uint8_t z) {
     uint8_t i;
+    if (obj_index >= MAX_SPRITE_OBJECTS) { return; }
     x16_ram_bank = MEM_BANK_SPRITE_TABLE;
     for (i = sprite_object[obj_index].spr_index; i < sprite_object[obj_index].spr_index + sprite_object[obj_index].count; i++) {
         sprite_attr_z_flip[i] = z;
-        EMU_DEBUG_2(1);
     }
     zpc0.h = SPRITE_ATTR_Z_FLIP;
     if (i > 1) {
@@ -211,6 +211,7 @@ void SpriteObjectSetZFlip(uint8_t obj_index, uint8_t z) {
 }
 void SpriteObjectSetSizePalette(uint8_t obj_index, uint8_t size, uint8_t palette) {
     uint8_t i, a;
+    if (obj_index >= MAX_SPRITE_OBJECTS) { return; }
     x16_ram_bank = MEM_BANK_SPRITE_TABLE;
     a = palette & 0x0F;
     sprite_object[obj_index].spr_size = size;
@@ -231,8 +232,8 @@ void SpriteObjectSetSizePalette(uint8_t obj_index, uint8_t size, uint8_t palette
 
 // high priority: low indexes
 static uint8_t SmCheckHigh(uint8_t n) {
-    uint8_t i, j, aux;
-    for (i = 64 - n; i < 0xFF; i--) { // can't do >= 0 on unsigned, checks for underflow instead
+    uint8_t i, j, aux = 0;
+    for (i = 63; i < 0xFF; i--) { // can't do >= 0 on unsigned, checks for underflow instead
         // aux is number of free slots in a row
         if (sprites_used[i] == 0) {
             aux++;
@@ -252,8 +253,8 @@ static uint8_t SmCheckHigh(uint8_t n) {
 }
 // low priority: high indexes
 static uint8_t SmCheckLow(uint8_t n) {
-    uint8_t i, j, aux;
-    for (i = 64; i <= 128 - n; i++) {
+    uint8_t i, j, aux = 0;
+    for (i = 64; i <= 127; i++) {
         // aux is number of free slots in a row
         if (sprites_used[i] == 0) {
             aux++;
@@ -292,7 +293,7 @@ uint8_t SpriteManagerReserve(uint8_t n, uint8_t priority) {
     }
     // just give me a sprite idc which one
     switch (priority) {
-    case SM_PRIORITY_HIGH:
+    case SPR_PRIORITY_HIGH:
         // lower indexes render first
         i = SmCheckHigh(n);
         if (i != 0xFF) {
@@ -307,7 +308,7 @@ uint8_t SpriteManagerReserve(uint8_t n, uint8_t priority) {
         }
         // still nothing :(
         return 0xFF;
-    case SM_PRIORITY_LOW:
+    case SPR_PRIORITY_LOW:
         // higher indexes render last
         i = SmCheckLow(n);
         if (i != 0xFF) {

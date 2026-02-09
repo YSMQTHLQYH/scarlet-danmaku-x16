@@ -65,8 +65,8 @@ extern _sSpriteObject* sprite_object;
 // priority is if it should render in front or behind already existing sprites (or an specific index)
 // rest ofarguments are the same that get written object struct
 // returns object index (or 0xFF if it failed)
-uint8_t SpriteObjectCreate(uint8_t priority, uint8_t count, uint8_t width, uint8_t spr_size);
-void SpriteObjectFree(uint8_t index);
+uint8_t CreateSpriteObject(uint8_t priority, uint8_t count, uint8_t width, uint8_t spr_size);
+void FreeSpriteObject(uint8_t index);
 
 // usues zpc0!
 // sets the address of graphics data for each sprite
@@ -78,6 +78,7 @@ void SpriteObjectSetAddr(uint8_t obj_index, uint8_t sheet_n, uint8_t* data);
 void SpriteObjectSetPosition(uint8_t obj_index, uint16_t x, uint16_t y);
 
 // uses zpc0!
+// bits 3-2 = z, bits 1-0 = flip
 void SpriteObjectSetZFlip(uint8_t obj_index, uint8_t z);
 // uses zpc0!
 // size: bits 0-1 = width, bits 3-2 = height
@@ -85,8 +86,8 @@ void SpriteObjectSetSizePalette(uint8_t obj_index, uint8_t size, uint8_t palette
 
 //  ---- reserving hardware sprites
 enum {
-    SM_PRIORITY_HIGH = MAX_SPRITES + 1,
-    SM_PRIORITY_LOW = MAX_SPRITES + 2,
+    SPR_PRIORITY_HIGH = MAX_SPRITES + 1,
+    SPR_PRIORITY_LOW = MAX_SPRITES + 2,
 };
 /* marks hardware sprite slots as used
 n: number of hardware slots to reserve, guaranteed to be contiguous

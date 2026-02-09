@@ -58,7 +58,7 @@ void test_sprite() {
             EMU_DEBUG_1(pl.error_code);
         }
 
-        p_obj = SpriteObjectCreate(SM_PRIORITY_HIGH, 1, 1, 0b1010);
+        p_obj = CreateSpriteObject(SPR_PRIORITY_HIGH, 1, 1, 0b1010);
         addr.w = MEM_VRAM_1_KERNAL_CHARSET_START >> 5;
         addr.h |= 0x08; // addr bit 16
         SpriteObjectSetAddr(p_obj, addr.h | 0x00, &addr.l);
@@ -155,7 +155,7 @@ char test_song_file_name_3[] = "test assets/all ur base.zsm";
 
 char str_lag[] = "--";
 char str_wait_count[] = "----";
-
+uint8_t lag_so = 0, wc_so = 0;
 
 
 uint8_t show_debug = 1;
@@ -264,8 +264,8 @@ void main() {
         // segment 5: profiler print
         StrUint8Hex(lag_count, str_lag);
         StrUint16Hex(wait_count, str_wait_count);
-        PrintSpriteStr(str_lag, 1, 288, 202, 0);
-        PrintSpriteStr(str_wait_count, 2, 272, 210, 0);
+        PrintSpriteStr(lag_so, str_lag);
+        PrintSpriteStr(wc_so, str_wait_count);
 
         PrintPrevProfBlock();
         ProfilerEndBlock();
@@ -311,10 +311,17 @@ static void Init() {
         printf("Failed to hijack KERNAL font\n");
     }
 
+
+
     InputActionInit(0);
 
     //  ---- sprites
     SpriteManagerInit();
+
+    lag_so = CreateSpriteStr(SPR_PRIORITY_HIGH, 2, 0x0C, 0);
+    wc_so = CreateSpriteStr(SPR_PRIORITY_HIGH, 4, 0x0C, 0);
+    SpriteObjectSetPosition(lag_so, 288, 202);
+    SpriteObjectSetPosition(wc_so, 272, 210);
 
     //  ---- graphics
     VERA_CTRL = 0x00;
@@ -328,30 +335,6 @@ static void Init() {
     SetColorPalette(15, color_palette);
 }
 
-char prf_str[] = "----";
-static void PrintPrevProfBlock() {
-    uint8_t i, x, a;
-    _uConv16 t;
-    for (i = 0; i < profiler_previous_segment_count; i++) {
-        t.w = profiler_segment_previous[i];
-        if (t.h == 0) {
-            // skips the top two digits if they are 0
-            a = 2;
-            x = 16;
-        } else {
-            a = 0;
-            x = 0;
-        }
-        StrUint16Hex(t.w, &prf_str[0]);
-        PrintSpriteStr(&prf_str[a], i + 3, 272 + x, 100 + (i << 3), 0);
-        //Print2BppBitmapStr(prf_str, bitmap_front_buffer, 62, 170 + (i << 3));
-    }
-    // total
-    StrUint16Hex(profiler_previous_total, prf_str);
-    PrintSpriteStr(prf_str, i + 3, 272, 104 + (i << 3), 0);
-
-}
-
 #define SEGMENT_COUNT   6
 char* prf_frame_str[] = {
     "music:",
@@ -361,6 +344,34 @@ char* prf_frame_str[] = {
     "math :",
     "text :",
 };
+
+char prf_str[] = "----";
+static void PrintPrevProfBlock() {
+    static uint8_t created = 0;
+    static uint8_t str_obj[SEGMENT_COUNT + 1] = { 0 };
+    uint8_t i;
+    _uConv16 t;
+    if (!created) {
+        for (i = 0; i < SEGMENT_COUNT; i++) {
+            str_obj[i] = CreateSpriteStr(SPR_PRIORITY_HIGH, 4, 0x0C, 0);
+            SpriteObjectSetPosition(str_obj[i], 272, 100 + (i << 3));
+        }
+        str_obj[i] = CreateSpriteStr(SPR_PRIORITY_HIGH, 4, 0x0C, 0);
+        SpriteObjectSetPosition(str_obj[i], 272, 104 + (i << 3));
+        created = 1;
+    }
+    for (i = 0; i < SEGMENT_COUNT; i++) {
+        t.w = profiler_segment_previous[i];
+        StrUint16Hex(t.w, prf_str);
+        PrintSpriteStr(str_obj[i], prf_str);
+        //Print2BppBitmapStr(prf_str, bitmap_front_buffer, 62, 170 + (i << 3));
+    }
+    // total
+    StrUint16Hex(profiler_previous_total, prf_str);
+    PrintSpriteStr(str_obj[i], prf_str);
+
+}
+
 
 static void PrintProfilerBitmapFrame(uint8_t buffer_n) {
     uint8_t i;

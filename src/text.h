@@ -3,21 +3,21 @@
 
 #include <stdint.h>
 
-#define TEXT_SPRITE_MAX_LENGHT  16
-#define TEXT_SPRITE_INDEX_START 0x60
-#define TEXT_MAX_SPRITES        0x20
 
 
 // loads KERNAL's monocrome font and makes a 2/4bpp copy of it for bitmap graphics / sprites
 // returns 0 on success, 1 on failure
 uint8_t HijackRomCharset(uint8_t charset, uint8_t font_bpp, uint8_t color);
 
-// a worse version of bitmap str but is about 4 times faster
-// str_slot is "slot" string is written to, set it to 0 to write to any free slot, set to anything else to replace that str
-// returns str_slot of text written, 0 if there wasn't any free slots
-uint8_t PrintSpriteStr(char* str, uint8_t str_slot, uint16_t x, uint16_t y, uint8_t palette);
-// clears str_slot and sprites used by it
-void FreeSpriteStr(uint8_t str_slot);
+
+// uses zpc0!
+// returns index of sprite object
+uint8_t CreateSpriteStr(uint8_t spr_priority, uint8_t lenght, uint8_t z_flip, uint8_t palette);
+void FreeSpriteStr(uint8_t spr_obj);
+// uses zpc0!
+// for setting position and stuff just call the sprite object functions
+// writes text to an already existing (string) sprite obeject
+void PrintSpriteStr(uint8_t spr_obj, char* str);
 
 
 // blits text into the bitmap layer 1, does not keep track of the text in any way
