@@ -8,10 +8,11 @@ we are using dual frame buffers, we can afford this as it's a low resolution and
 conviniently we have frame buffer 0 on VRAM page 0 and frame buffer 1 on VRAM page 1, so we can use all the same addresses
 */
 
-#define BITMAP_WIDTH    320
-#define BITMAP_HEIGHT   240
-//#define BITMAP_BPP      2 // I don't think there's much use for this
+#define BITMAP_WIDTH            320
+#define BITMAP_HEIGHT           240
+#define BITMAP_BPP              2
 #define BITMAP_PIXELS_PER_BYTE  4 // inverse of BITMAP_BPP I guess
+#define BITMAP_WIDTH_BYTES      80 // BITMAP_WIDTH / BITMAP_PIXELS_PER_BYTE, don't trust the compiler enough
 
 
 
@@ -26,6 +27,7 @@ void BitmapInit(uint8_t start_frame_buffer);
 void BitmapClearBuffer(uint8_t buffer_n, uint8_t color);
 void BitmapSwapBuffers();
 
+// uses zpc0!
 // x and w is in increments of 4 pixels
 void BitmapFillRect(uint8_t buffer_n, uint8_t color, uint8_t x, uint8_t y, uint8_t w, uint8_t h);
 

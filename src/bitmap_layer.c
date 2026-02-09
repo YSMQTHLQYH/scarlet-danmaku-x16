@@ -8,10 +8,10 @@ uint8_t bitmap_back_buffer = 0;
 uint16_t lookup_bitmap_y[BITMAP_HEIGHT] = { 0 };
 void CalculateYLookup() {
     uint8_t i;
-    uint16_t y = 0;
+    register uint16_t y = 0;
     for (i = 0; i < BITMAP_HEIGHT; i++) {
         lookup_bitmap_y[i] = y;
-        y += BITMAP_WIDTH / BITMAP_PIXELS_PER_BYTE;
+        y += BITMAP_WIDTH_BYTES;
     }
 }
 void BitmapInit(uint8_t start_frame_buffer) {
@@ -25,7 +25,11 @@ void BitmapInit(uint8_t start_frame_buffer) {
 
     VERA_CTRL = 0;
     VERA_DC0_VIDEO |= (1 << 5);
+#if (BITMAP_BPP == 2)
     VERA_L1_CFG = (1 << 2) + COLOR_DEPTH_2BPP;
+#elif (BITMAP_BPP == 4)
+    VERA_L1_CFG = (1 << 2) + COLOR_DEPTH_4BPP;
+#endif
     VERA_L1_BITMAPBASE = ((bitmap_front_buffer << 7) | (MEM_BITMAP_1_ADDR_M >> 1) & 0xFC);
 
     BitmapClearBuffer(0, 0);
@@ -34,19 +38,25 @@ void BitmapInit(uint8_t start_frame_buffer) {
 
 void BitmapClearBuffer(uint8_t buffer_n, uint8_t color) {
     uint8_t i, j, c;
+#if (BITMAP_BPP == 2)
     i = color & 0x03;
     c = i;
     while (i) {
         i <<= 2;
         c |= i;
     }
+#elif (BITMAP_BPP == 4)
+    i = color & 0x0F;
+    c = i;
+    c |= (i << 4);
+#endif
     VERA_CTRL = 0;
     VERA_ADDRx_H = (buffer_n & 1) | ADDR_INC_1;
     VERA_ADDRx_M = MEM_BITMAP_1_ADDR_M;
     VERA_ADDRx_L = 0;
 
     for (j = 0; j < BITMAP_HEIGHT; j++) {
-        for (i = 0; i < (BITMAP_WIDTH >> 2); i++) {
+        for (i = 0; i < BITMAP_WIDTH_BYTES; i++) {
             VERA_DATA0 = c;
         }
     }
@@ -66,29 +76,36 @@ void BitmapSwapBuffers() {
 
 
 void BitmapFillRect(uint8_t buffer_n, uint8_t color, uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+#define ADDR    zpc0
     uint8_t i, j, c;
-    _uConv16 addr;
+#if (BITMAP_BPP == 2)
     i = color & 0x03;
     c = i;
     while (i) {
         i <<= 2;
         c |= i;
     }
+#elif (BITMAP_BPP == 4)
+    i = color & 0x0F;
+    c = i;
+    c |= (i << 4);
+#endif
 
     VERA_CTRL = 0;
     VERA_ADDRx_H = (buffer_n & 1) | ADDR_INC_1;
-    addr.l = x;
-    addr.h = MEM_BITMAP_1_ADDR_M;
-    addr.w += lookup_bitmap_y[y];
-    VERA_ADDRx_M = addr.h;
-    VERA_ADDRx_L = addr.l;
+    ADDR.l = x;
+    ADDR.h = MEM_BITMAP_1_ADDR_M;
+    ADDR.w += lookup_bitmap_y[y];
+    VERA_ADDRx_M = ADDR.h;
+    VERA_ADDRx_L = ADDR.l;
 
     for (j = 0; j < h; j++) {
         for (i = 0; i < w; i++) {
             VERA_DATA0 = c;
         }
-        addr.w += 80;
-        VERA_ADDRx_M = addr.h;
-        VERA_ADDRx_L = addr.l;
+        ADDR.w += BITMAP_WIDTH_BYTES;
+        VERA_ADDRx_M = ADDR.h;
+        VERA_ADDRx_L = ADDR.l;
     }
+#undef ADDR
 }
