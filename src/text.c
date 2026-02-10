@@ -117,9 +117,9 @@ void PrintSpriteStr(uint8_t spr_obj, char* str) {
 
     each line of bitmap is 320 pixels, at 2bpp that means 80 bytes per line
     while there isn't an easy way to write them in order, setting ADDRx_INC to 80 means we can easly write
-    0->2->4->6->8->12->14 in a row without touching ADDRx ourselves, (same applies for the odd numbered bytes)
+    0->2->4->6->8->10->12->14 in a row without touching ADDRx ourselves, (same applies for the odd numbered bytes)
 
-    we just have to read the bytes from the font while skipping ever other byte,
+    we just have to read the bytes from the font while skipping every other byte,
     which we can easily do with ADDRx_INC = 2
 
     we just have to read from one ADDR and immediately write it into the other ADDR
@@ -212,6 +212,124 @@ void Print2BppBitmapStr(char* str, uint8_t buffer_n, uint8_t x, uint8_t y) {
 
 
 }
+
+/*
+    uses VeraFX to copy from VRAM multiple bytes at once
+    same as 2bpp, copy pasted explaination just in case
+
+    each 4bpp 8x8 char in the font is 32 bytes total, pixels are stored contiguously left to right, top to bottom
+    such that B0-B31 is byte number and every '-' is a pixel
+    |B0 --|B1 --|B2 --|B3 --|
+    |B4 --|B5 --|B6 --|B7 --|
+    |B8 --|B9 --|B10--|B11--|
+    |B12--|B13--|B14--|B15--|
+    |B16--|B17--|B18--|B19--|
+    |B20--|B21--|B22--|B23--|
+    |B24--|B25--|B26--|B27--|
+    |B28--|B29--|B30--|B31--|
+
+    each line of bitmap is 320 pixels, at 4bpp that means 160 bytes per line
+    while there isn't an easy way to write them in order, setting ADDRx_INC to 160 means we can easly write
+    0->4->8->12->16->20->24->28 in a row without touching ADDRx ourselves, (same applies for the other 3 columns of bytes)
+
+    we just have to read the bytes from the font while skipping every three bytes between each read,
+    which we can easily do with ADDRx_INC = 4
+
+    we just have to read from one ADDR and immediately write it into the other ADDR
+    repeat that 8 times, move the addresses a bit and then do *that* again 8 times, and again and again
+*/
+void Print4BppBitmapStr(char* str, uint8_t buffer_n, uint8_t x, uint8_t y) {
+    _uConv16 font_addr, pixel_addr;
+    uint8_t i;
+    char next_char;
+
+    // ---- ADDRx_H and ADDRx_INC doesn't change during entire function so we can set them at the start once
+    // -- VERA_DATA0 for reading the characters
+    // selects ADDR0
+    VERA_CTRL = 0;
+    VERA_ADDRx_H = ADDR_INC_4 | MEM_FONT_VRAM_PAGE;
+    // -- VERA_DATA1 for writting the characters into bitmap
+    VERA_CTRL = 1;
+    VERA_ADDRx_H = ADDR_INC_160 | buffer_n;
+
+    for (i = 0; i < TEXT_BITMAP_MAX_LENGHT; i++) {
+        next_char = str[i];
+        if (next_char == 0)break; // if this happens we have reached the end of the string
+        //  ----  Blit one character
+
+        // get address of char in font
+        font_addr.u16 = (next_char << 5);
+        font_addr.u8_h += MEM_4BPP_FONT_1_ADDR_M;
+        // get address of target starting pixel
+        pixel_addr.u16 = lookup_bitmap_y[y];
+        pixel_addr.u16 += x + (i << 2);
+
+        // setup for even-byte pass
+        VERA_CTRL = 0;
+        VERA_ADDRx_M = font_addr.u8_h;
+        VERA_ADDRx_L = font_addr.u8_l;
+        VERA_CTRL = 1;
+        VERA_ADDRx_M = pixel_addr.u8_h;
+        VERA_ADDRx_L = pixel_addr.u8_l;
+
+        // setup carry flag as boolean variable
+        // set = pass 1-3 , clear = pass4
+        asm("sec");
+        asm("ldy #3");
+    copy_paste_x8:
+        asm("phy");
+        asm("lda $9F23"); // A = VERA_DATA0
+        asm("nop");
+        asm("sta $9F24"); // VERA_DATA1 = A
+        asm("lda $9F23");
+        asm("nop");
+        asm("sta $9F24");
+        //2
+        asm("lda $9F23");
+        asm("nop");
+        asm("sta $9F24");
+        asm("lda $9F23");
+        asm("nop");
+        asm("sta $9F24");
+        //4
+        asm("lda $9F23");
+        asm("nop");
+        asm("sta $9F24");
+        asm("lda $9F23");
+        asm("nop");
+        asm("sta $9F24");
+        //6
+        asm("lda $9F23");
+        asm("nop");
+        asm("sta $9F24");
+        asm("lda $9F23");
+        asm("nop");
+        asm("sta $9F24");
+
+        //8
+        asm("bcs %g", next_pass); // if(last_pass)continue;
+        asm("ply");
+        continue;
+    next_pass:
+        // setup for odd-byte pass
+        font_addr.u16++;
+        pixel_addr.u16++;
+        VERA_CTRL = 0;
+        VERA_ADDRx_M = font_addr.u8_h;
+        VERA_ADDRx_L = font_addr.u8_l;
+        VERA_CTRL = 1;
+        VERA_ADDRx_M = pixel_addr.u8_h;
+        VERA_ADDRx_L = pixel_addr.u8_l;
+        asm("ply");
+        asm("dey"); //pass--
+        asm("sec");
+        asm("bne %g", copy_paste_x8); // branch if pass != 0
+        asm("clc"); //last_pass = true
+        goto copy_paste_x8;
+
+    }
+}
+
 
 //  ----  Conversions to str
 

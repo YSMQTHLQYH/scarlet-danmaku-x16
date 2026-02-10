@@ -23,6 +23,10 @@ void PrintSpriteStr(uint8_t spr_obj, char* str);
 // blits text into the bitmap layer 1, does not keep track of the text in any way
 // position in the x-axis is x*4
 void Print2BppBitmapStr(char* str, uint8_t buffer_n, uint8_t x, uint8_t y);
+// blits text into the bitmap layer 1, does not keep track of the text in any way
+// position in the x-axis is x*2
+void Print4BppBitmapStr(char* str, uint8_t buffer_n, uint8_t x, uint8_t y);
+
 
 //  ---- Conversions to str
 

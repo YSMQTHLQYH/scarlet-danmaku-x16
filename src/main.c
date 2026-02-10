@@ -238,14 +238,14 @@ void main() {
         if (IsActionJustPressed(ACTION_DEBUG)) {
             if (!show_debug) {
                 show_debug = 1;
-                Print2BppBitmapStr("0", bitmap_front_buffer, 67, 52);
-                Print2BppBitmapStr("1", bitmap_front_buffer, 67, 64);
-            } else { show_debug = 0; BitmapFillRect(bitmap_front_buffer, 0, 52, 50, 26, 22); }
+                Print4BppBitmapStr("0", bitmap_front_buffer, 134, 52);
+                Print4BppBitmapStr("1", bitmap_front_buffer, 134, 64);
+            } else { show_debug = 0; BitmapFillRect(bitmap_front_buffer, 0, 208, 50, 104, 22); }
         }
         if (show_debug) {
-            JoystickDrawToBitmap(0, bitmap_front_buffer, 70, 50);
-            JoystickDrawToBitmap(1, bitmap_front_buffer, 70, 62);
-            InputActionDrawToBitmap(bitmap_front_buffer, 52, 66);
+            JoystickDrawToBitmap(0, bitmap_front_buffer, 140, 50);
+            JoystickDrawToBitmap(1, bitmap_front_buffer, 140, 62);
+            InputActionDrawToBitmap(bitmap_front_buffer, 104, 66);
         }
         ProfilerEndSegment();
 
@@ -302,7 +302,7 @@ static void Init() {
     VERA_IEN |= 0x01; //enables VSYNC interrupt if it wasn't already for some reason
 
     //  ---- text
-    s = HijackRomCharset(12, 4, 2);
+    s = HijackRomCharset(12, 4, 3);
     s += HijackRomCharset(12, 2, 3);
     KernalScreenSetCharset(3);
     if (s == 0) {
@@ -318,8 +318,8 @@ static void Init() {
     //  ---- sprites
     SpriteManagerInit();
 
-    lag_so = CreateSpriteStr(SPR_PRIORITY_HIGH, 2, 0x0C, 0);
-    wc_so = CreateSpriteStr(SPR_PRIORITY_HIGH, 4, 0x0C, 0);
+    lag_so = CreateSpriteStr(SPR_PRIORITY_HIGH, 2, 0x0C, 3);
+    wc_so = CreateSpriteStr(SPR_PRIORITY_HIGH, 4, 0x0C, 3);
     SpriteObjectSetPosition(lag_so, 288, 202);
     SpriteObjectSetPosition(wc_so, 272, 210);
 
@@ -353,10 +353,10 @@ static void PrintPrevProfBlock() {
     _uConv16 t;
     if (!created) {
         for (i = 0; i < SEGMENT_COUNT; i++) {
-            str_obj[i] = CreateSpriteStr(SPR_PRIORITY_HIGH, 4, 0x0C, 0);
+            str_obj[i] = CreateSpriteStr(SPR_PRIORITY_HIGH, 4, 0x0C, 3);
             SpriteObjectSetPosition(str_obj[i], 272, 100 + (i << 3));
         }
-        str_obj[i] = CreateSpriteStr(SPR_PRIORITY_HIGH, 4, 0x0C, 0);
+        str_obj[i] = CreateSpriteStr(SPR_PRIORITY_HIGH, 4, 0x0C, 3);
         SpriteObjectSetPosition(str_obj[i], 272, 104 + (i << 3));
         created = 1;
     }
@@ -375,22 +375,22 @@ static void PrintPrevProfBlock() {
 
 static void PrintProfilerBitmapFrame(uint8_t buffer_n) {
     uint8_t i;
-    Print2BppBitmapStr("profiler time", buffer_n, 52, 80);
-    Print2BppBitmapStr("(scanlines)", buffer_n, 54, 88);
+    Print4BppBitmapStr("profiler time", buffer_n, 104, 80);
+    Print4BppBitmapStr("(scanlines)", buffer_n, 108, 88);
 
     for (i = 0; i < SEGMENT_COUNT; i++) {
-        Print2BppBitmapStr(prf_frame_str[i], buffer_n, 56, 100 + (i << 3));
+        Print4BppBitmapStr(prf_frame_str[i], buffer_n, 112, 100 + (i << 3));
     }
-    Print2BppBitmapStr("total:", buffer_n, 56, 104 + (i << 3));
-    Print2BppBitmapStr("1 frame=020d", buffer_n, 52, 112 + (i << 3));
+    Print4BppBitmapStr("total:", buffer_n, 112, 104 + (i << 3));
+    Print4BppBitmapStr("1 frame=020d", buffer_n, 104, 112 + (i << 3));
 
-    Print2BppBitmapStr("lag frame:", buffer_n, 48, 202);
-    Print2BppBitmapStr("spare cpu:", buffer_n, 48, 210);
+    Print4BppBitmapStr("lag frame:", buffer_n, 96, 202);
+    Print4BppBitmapStr("spare cpu:", buffer_n, 96, 210);
 
     // joystick
     if (show_debug) {
-        Print2BppBitmapStr("0", bitmap_front_buffer, 67, 52);
-        Print2BppBitmapStr("1", bitmap_front_buffer, 67, 64);
+        Print4BppBitmapStr("0", bitmap_front_buffer, 134, 52);
+        Print4BppBitmapStr("1", bitmap_front_buffer, 134, 64);
     }
 }
 

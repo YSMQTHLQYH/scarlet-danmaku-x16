@@ -85,10 +85,14 @@ void BitmapFillRect(uint8_t buffer_n, uint8_t color, uint8_t x, uint8_t y, uint8
         i <<= 2;
         c |= i;
     }
+    x >>= 2;
+    w >>= 2;
 #elif (BITMAP_BPP == 4)
     i = color & 0x0F;
     c = i;
     c |= (i << 4);
+    x >>= 1;
+    w >>= 1;
 #endif
 
     VERA_CTRL = 0;

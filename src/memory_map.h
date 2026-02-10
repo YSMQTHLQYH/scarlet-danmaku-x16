@@ -52,7 +52,7 @@ A gap of 0x500 (1280) bytes until the next nicely aligned area
 */
 
 //  ---- Unused 2
-#define MEM_VRAM_0_UNUSED_2_START   0x5000
+#define MEM_VRAM_0_UNUSED_2_START   0xA000
 #define MEM_VRAM_0_UNUSED_2_END     0xCFFF
 /*
 Maybe *the* bullet table here? I would like it to be a nice round number so maybe at 0x8000?
