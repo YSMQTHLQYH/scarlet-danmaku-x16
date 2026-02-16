@@ -78,49 +78,6 @@ void test_sprite() {
     VERA_ADDRx_H = 0x11;
     VERA_ADDRx_M = addr.h;
     VERA_ADDRx_L = addr.l;
-    // sprite "player"
-
-
-    // sprite 64x64
-    addr.w = MEM_VRAM_0_UNUSED_2_START >> 5;
-    VERA_DATA0 = addr.l; // addr 12-5
-    VERA_DATA0 = addr.h | 0x80; // addr 16-13 (and mode)
-    VERA_DATA0 = 0x10;//x
-    VERA_DATA0 = 0;
-    VERA_DATA0 = 0x10;//y
-    VERA_DATA0 = 0;
-    VERA_DATA0 = 0x0C;//z, flip
-    VERA_DATA0 = 0xF0;//size, palete
-
-    // sprite 32x32
-    VERA_DATA0 = addr.l; // addr 12-5
-    VERA_DATA0 = addr.h | 0x80; // addr 16-13
-    VERA_DATA0 = 0x10;//x
-    VERA_DATA0 = 0;
-    VERA_DATA0 = 0x60;//y
-    VERA_DATA0 = 0;
-    VERA_DATA0 = 0x0C;//z, flip
-    VERA_DATA0 = 0xA0;//size, palete
-    // sprite 16x16
-    //addr.w += (128 >> 5);
-    VERA_DATA0 = addr.l; // addr 12-5
-    VERA_DATA0 = addr.h | 0x80; // addr 16-13
-    VERA_DATA0 = 0x40;//x
-    VERA_DATA0 = 0;
-    VERA_DATA0 = 0x60;//y
-    VERA_DATA0 = 0;
-    VERA_DATA0 = 0x0C;//z, flip
-    VERA_DATA0 = 0x50;//size, palete
-    // sprite 8x8
-    VERA_DATA0 = addr.l; // addr 12-5
-    VERA_DATA0 = addr.h | 0x80; // addr 16-13
-    VERA_DATA0 = 0x60;//x
-    VERA_DATA0 = 0;
-    VERA_DATA0 = 0x60;//y
-    VERA_DATA0 = 0;
-    VERA_DATA0 = 0x0C;//z, flip
-    VERA_DATA0 = 0x00;//size, palete
-
 
     // sprite programmerart
     addr.w = (MEM_VRAM_0_UNUSED_2_START + 4096);
@@ -165,6 +122,7 @@ void main() {
     uint8_t test_number = 0;
     char* selected_song = 0;
     uint8_t song_name_length = 0;
+    uint8_t i;
 
     // emulator debug  mode
     *(uint8_t*)0x9FB0 = 1;
@@ -227,41 +185,61 @@ void main() {
     //  --- main loop
     while (1) {
         ProfilerBeginBlock();
+        // segment 0: clear buffer
+        BitmapSwapBuffers();
+        //BitmapLayerFillRect(bitmap_back_buffer, 1, 0, 0, 224, 240);
+        BitmapLayerClearGameArea(bitmap_back_buffer, 1);
+        ProfilerEndSegment();
 
-        // segment 0: music
+        // segment 1: music
         ZsmTick();
         ProfilerEndSegment();
 
-        // segment 1: input
+        // segment 2: input
         HandleInputActions();
         //show inputs on screen
         if (IsActionJustPressed(ACTION_DEBUG)) {
             if (!show_debug) {
                 show_debug = 1;
-                Print4BppBitmapStr("0", bitmap_front_buffer, 134, 52);
-                Print4BppBitmapStr("1", bitmap_front_buffer, 134, 64);
-            } else { show_debug = 0; BitmapFillRect(bitmap_front_buffer, 0, 208, 50, 104, 22); }
+                Print4BppBitmapStr("0", 0, 134, 50);
+                Print4BppBitmapStr("1", 0, 134, 62);
+                Print4BppBitmapStr("0", 1, 134, 50);
+                Print4BppBitmapStr("1", 1, 134, 62);
+            } else {
+                show_debug = 0;
+                BitmapLayerFillRect(0, 0, 224, 48, 76, 22);
+                BitmapLayerFillRect(1, 0, 224, 48, 76, 22);
+            }
         }
         if (show_debug) {
-            JoystickDrawToBitmap(0, bitmap_front_buffer, 140, 50);
-            JoystickDrawToBitmap(1, bitmap_front_buffer, 140, 62);
-            InputActionDrawToBitmap(bitmap_front_buffer, 104, 66);
+            JoystickDrawToBitmap(0, bitmap_back_buffer, 140, 48);
+            JoystickDrawToBitmap(1, bitmap_back_buffer, 140, 60);
+            InputActionDrawToBitmap(bitmap_back_buffer, 118, 64);
         }
-        ProfilerEndSegment();
-
-        // segment 2: placeholder dummy
-        test_sprite();
         ProfilerEndSegment();
 
         // segment 3: placeholder dummy
+        test_sprite();
         SpriteManagerWriteChanges();
         ProfilerEndSegment();
 
-        // segment 4: math
+        // segment 4: placeholder dummy
+        for (i = 0; i < 16; i++) {
+            BitmapSetPixel(bitmap_back_buffer, i + (i << 4), 50 + i, 100);
+            BitmapSetPixel(bitmap_back_buffer, i + (i << 4), 55 + i, 101);
+            BitmapSetPixel(bitmap_back_buffer, i + (i << 4), 60 + i, 102);
+            BitmapSetPixel(bitmap_back_buffer, i + (i << 4), 65 + i, 103);
+        }
+        ProfilerEndSegment();
+
+        // segment 5: placeholder dummy
+        ProfilerEndSegment();
+
+        // segment 6: math
         MathTest(test_number);
         ProfilerEndSegment();
 
-        // segment 5: profiler print
+        // segment 7: profiler print
         StrUint8Hex(lag_count, str_lag);
         StrUint16Hex(wait_count, str_wait_count);
         PrintSpriteStr(lag_so, str_lag);
@@ -320,8 +298,8 @@ static void Init() {
 
     lag_so = CreateSpriteStr(SPR_PRIORITY_HIGH, 2, 0x0C, 3);
     wc_so = CreateSpriteStr(SPR_PRIORITY_HIGH, 4, 0x0C, 3);
-    SpriteObjectSetPosition(lag_so, 288, 202);
-    SpriteObjectSetPosition(wc_so, 272, 210);
+    SpriteObjectSetPosition(lag_so, 288, 210);
+    SpriteObjectSetPosition(wc_so, 272, 226);
 
     //  ---- graphics
     VERA_CTRL = 0x00;
@@ -331,16 +309,19 @@ static void Init() {
 
     BitmapInit(0);
     PrintProfilerBitmapFrame(0);
+    PrintProfilerBitmapFrame(1);
 
     SetColorPalette(15, color_palette);
 }
 
-#define SEGMENT_COUNT   6
+#define SEGMENT_COUNT   8
 char* prf_frame_str[] = {
+    "clear:",
     "music:",
     "input:",
-    "seg 2:",
     "seg 3:",
+    "seg 4:",
+    "seg 5:",
     "math :",
     "text :",
 };
@@ -375,22 +356,26 @@ static void PrintPrevProfBlock() {
 
 static void PrintProfilerBitmapFrame(uint8_t buffer_n) {
     uint8_t i;
-    Print4BppBitmapStr("profiler time", buffer_n, 104, 80);
-    Print4BppBitmapStr("(scanlines)", buffer_n, 108, 88);
+    Print4BppBitmapStr("\"profiler\"", buffer_n, 112, 72);
+    Print4BppBitmapStr("time", buffer_n, 112, 80);
+    Print4BppBitmapStr("(scanlines)", buffer_n, 112, 88);
 
     for (i = 0; i < SEGMENT_COUNT; i++) {
         Print4BppBitmapStr(prf_frame_str[i], buffer_n, 112, 100 + (i << 3));
     }
     Print4BppBitmapStr("total:", buffer_n, 112, 104 + (i << 3));
-    Print4BppBitmapStr("1 frame=020d", buffer_n, 104, 112 + (i << 3));
+    Print4BppBitmapStr("sl/frame:", buffer_n, 112, 112 + (i << 3));
+    Print4BppBitmapStr("020d", buffer_n, 136, 120 + (i << 3));
 
-    Print4BppBitmapStr("lag frame:", buffer_n, 96, 202);
-    Print4BppBitmapStr("spare cpu:", buffer_n, 96, 210);
+    Print4BppBitmapStr("lag frame:", buffer_n, 112, 202);
+    Print4BppBitmapStr("spare cpu:", buffer_n, 112, 218);
 
     // joystick
     if (show_debug) {
-        Print4BppBitmapStr("0", bitmap_front_buffer, 134, 52);
-        Print4BppBitmapStr("1", bitmap_front_buffer, 134, 64);
+        Print4BppBitmapStr("0", 0, 134, 50);
+        Print4BppBitmapStr("1", 0, 134, 62);
+        Print4BppBitmapStr("0", 1, 134, 50);
+        Print4BppBitmapStr("1", 1, 134, 62);
     }
 }
 

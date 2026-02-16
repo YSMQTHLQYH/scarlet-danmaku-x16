@@ -32,36 +32,28 @@ size of spritesheet 128x128x bpp or 128x64 8bpp
 
 */
 
+/* Let's do the 4bpp 320x240, for now at least*/
+
 /*    VRAM PAGE 0 START    */
 //  ---- Frame buffer 0 of bitmap 1 (main game bullets)
 #define MEM_VRAM_0_BITMAP_1_START   0X0000
-#define MEM_VRAM_0_BITMAP_1_END     0X4AFF
+#define MEM_VRAM_0_BITMAP_1_END     0X95FF
 
 #define MEM_BITMAP_1_ADDR_M   0x00
 
 //  ---- Unused 1
-#define MEM_VRAM_0_UNUSED_1_START   0x4B00
-#define MEM_VRAM_0_UNUSED_1_END     0x4FFF
+#define MEM_VRAM_0_UNUSED_1_START   0x9600
+#define MEM_VRAM_0_UNUSED_1_END     0x9FFF
 /*
-A gap of 0x500 (1280) bytes until the next nicely aligned area
-2 of these because one for each frame buffer, ideas for each of them:
-> 320x8 4bpp bitmap (switch from interrupt)
-> 640 colors to swap mid frame with VeraFX cache (too much cpu time in interrupts needed for this to be useful?)
-> 40 8x8 4bpp sprites (or 10 16x16 ones, or 5 16x32 ones, or 2.5 32x32 ones)
-> 20 8x8 8bpp sprites (or 5 16x16, or a 80x16 nice icon)
+the awkward area
+the space stolen from side of bitmap is probably going to bleed into this part to
+the continuation of the game area's bitmap is still up for grabs
 */
 
 //  ---- Unused 2
 #define MEM_VRAM_0_UNUSED_2_START   0xA000
 #define MEM_VRAM_0_UNUSED_2_END     0xCFFF
-/*
-Maybe *the* bullet table here? I would like it to be a nice round number so maybe at 0x8000?
-needs (at least) px,vx,py,vy, all of them 16-bit, 8 bytes per bullet
-say we want 1000 bullets, that's 8KB, 0x2000
-maybe max of 1536 bullets so its from 0x5000 to 0x8000
-pretty ambitious ngl, just the math_test at that size takes 405 out of the 525 scanlines, it's going to be slower with added drawing
-each scanline is 254 clock cycles (~6 scanlines per clock cycle in *that* function)
-*/
+
 
 //  ---- Text
 #define MEM_VRAM_0_2BPP_FONT_1_START    0xD000
@@ -77,14 +69,24 @@ each scanline is 254 clock cycles (~6 scanlines per clock cycle in *that* functi
 /*    VRAM PAGE 1 START    */
 //  ---- Frame buffer 1 of bitmap 1 (same address as frame buffer 0)
 #define MEM_VRAM_1_BITMAP_1_START   0X0000
-#define MEM_VRAM_1_BITMAP_1_END     0X4AFF
+#define MEM_VRAM_1_BITMAP_1_END     0X95FF
 
 //#define MEM_BITMAP_1_ADDR_M   0x00 
 
 
 //  ---- Unused 1
-#define MEM_VRAM_1_UNUSED_1_START   0x4B00
-#define MEM_VRAM_1_UNUSED_1_END     0xEFFF
+#define MEM_VRAM_1_UNUSED_1_START   0x9600
+#define MEM_VRAM_1_UNUSED_1_END     0x9FFF
+/*
+the awkward area
+the space stolen from side of bitmap is probably going to bleed into this part to
+the continuation of the game area's bitmap is still up for grabs
+*/
+
+//  ---- Unused 2
+#define MEM_VRAM_1_UNUSED_2_START   0xA000
+#define MEM_VRAM_1_UNUSED_2_END     0xEFFF
+
 
 //  ---- KERNAL charset (not actually used in game but needed free to load fonts)
 /*
@@ -102,7 +104,7 @@ Anyhing that's 2KB
 #define MEM_VRAM_1_KERNAL_FONT_ADDR_M   0xF0
 
 
-//  ---- Unused 2
+//  ---- Unused 3
 /*
 There's probably something useful we can do with these 448 bytes in this comfy little nook
 Not quite enough for a 64*8 8bpp sprite :/
@@ -110,8 +112,8 @@ Not quite enough for a 64*8 8bpp sprite :/
 > Or 14 icons each 8x8x4
 > Maybe a 112x8 lifebar (segments repeated for fullscreen probs)
 */
-#define MEM_VRAM_1_UNUSED_2_START   0xF800
-#define MEM_VRAM_1_UNUSED_2_END     0xF9BF
+#define MEM_VRAM_1_UNUSED_3_START   0xF800
+#define MEM_VRAM_1_UNUSED_3_END     0xF9BF
 
 //  ---- VERA Hardware registers
 #define MEM_VRAM_1_VERA_PSG_START   0xF9C0
@@ -221,6 +223,13 @@ alternatively, have the game run at 240x320 and cut off the top section of the s
 I suppose we could always have the game area in 240x240 and just move around the GUI but at that point why bother with vertical monitors
 idk fam, this sounds like a bad idea from game balance pov
 */
+
+
+/*      LOW RAM START      */
+#define MEM_Y_LOOKUP_START  0x9D00
+#define MEM_Y_LOOKUP_END    0x9EFF
+
+/*       LOW RAM END       */
 
 /*    BANKED RAM START     */
 #define MEM_BANK_SPRITE_TABLE   2

@@ -68,7 +68,6 @@ uint8_t CreateSpriteObject(uint8_t priority, uint8_t count, uint8_t width, uint8
             sprite_object[i].count = count;
             sprite_object[i].width = width;
             sprite_object[i].spr_size = spr_size;
-            EMU_DEBUG_2(sprite_object[i].spr_index);
             return i;
         }
     }

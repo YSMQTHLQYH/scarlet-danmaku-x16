@@ -56,7 +56,9 @@ uint8_t IsActionPressed(_eInputActionId);
 uint8_t IsActionJustPressed(_eInputActionId id);
 
 //  ---- draw pressed buttons on bitmap layer
+// x is in increments of two, just so we don't need to pass a 16-bit argument
 void JoystickDrawToBitmap(uint8_t joystick_n, uint8_t buffer_n, uint8_t x, uint8_t y);
+// x is in increments of two, just so we don't need to pass a 16-bit argument
 void InputActionDrawToBitmap(uint8_t buffer_n, uint8_t x, uint8_t y);
 
 

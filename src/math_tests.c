@@ -76,7 +76,7 @@ volatile _sVeraReg* const vera = (void*)0x9F20;
 #define TEST    8
 #define TEST_SIZE   64
 uint16_t test_arr[TEST * TEST_SIZE] = { 0 };
-#define TEST_ADDR_M 0x4B
+#define TEST_ADDR_M (uint8_t)0x96
 
 void MathTestsinit() {
     uint16_t i = 0;

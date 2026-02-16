@@ -1,5 +1,3 @@
-.import popa
-
 MAX_SPRITES = $80
 VERA_SPRITE_ATTR_M = $FC
 .importzp _x16_ram_bank
