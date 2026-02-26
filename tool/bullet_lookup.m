@@ -1,12 +1,13 @@
 count_angle = 256;
 count_speed = 8;
 count_page = 2;
+tps = 60;
 
 angle = 0:(2*pi)/count_angle:2*pi;
 angle = angle(1:count_angle); #octave starts counting at 1 instead of 0
 
-speed = [0.3:0.1:1;
-        1.125:0.125:2];
+speed = [1:0.75:6.25;
+        7:1.5:17.5];
 
 for j = 1:count_page
   for i = 1:count_speed
@@ -17,8 +18,8 @@ for j = 1:count_page
     x_float = sin(angle);
     y_float = cos(angle);
 
-    x_int = int16(x_float * i * 256);
-    y_int = int16(y_float * i * 256);
+    x_int = int16(x_float * s * 256 / tps);
+    y_int = int16(y_float * s * 256 / tps);
 
     x_low(j, i, 1:count_angle) = uint8(bitand(x_int, 255));
     x_high(j, i, 1:count_angle) = int8(bitshift(x_int, -8));

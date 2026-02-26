@@ -18,7 +18,7 @@
 
 
 void test_sprite() {
-    static uint16_t x = 100, y = 100;
+    static uint16_t x = 100, y = 200;
     static uint8_t b = 0, frame = 0, p_obj = 0;
     uint8_t j, c;
     uint16_t i;
@@ -86,7 +86,7 @@ void test_sprite() {
     addr.w >>= 5;
     VERA_DATA0 = addr.l; // addr 12-5
     VERA_DATA0 = addr.h | 0x80; // addr 16-13
-    VERA_DATA0 = 0x20;//x
+    VERA_DATA0 = 0xE4;//x
     VERA_DATA0 = 0;
     VERA_DATA0 = 0x100;//y
     VERA_DATA0 = 0;
@@ -224,16 +224,22 @@ void main() {
         SpriteManagerWriteChanges();
         ProfilerEndSegment();
 
-        // segment 4: placeholder dummy
-        for (i = 0; i < 16; i++) {
-            BitmapSetPixel(bitmap_back_buffer, i + (i << 4), 50 + i, 100);
-            BitmapSetPixel(bitmap_back_buffer, i + (i << 4), 55 + i, 101);
-            BitmapSetPixel(bitmap_back_buffer, i + (i << 4), 60 + i, 102);
-            BitmapSetPixel(bitmap_back_buffer, i + (i << 4), 65 + i, 103);
-        }
+        // segment 4: bullets
+        BulletTick();
+
         ProfilerEndSegment();
 
         // segment 5: placeholder dummy
+
+        x16_ram_bank = 3;
+        i = 0;
+        do {
+            if (*(uint8_t*)(0xA400 + i) == 1) {
+                BitmapSetPixel(bitmap_back_buffer, 0x66, (*(uint8_t*)(0xA100 + i) >> 1), *(uint8_t*)(0xA300 + i));
+            }
+            i += 4;
+        } while (i != 0);
+
         ProfilerEndSegment();
 
         // segment 6: math
@@ -328,7 +334,7 @@ char* prf_frame_str[] = {
     "music:",
     "input:",
     "seg 3:",
-    "seg 4:",
+    "bllts:",
     "seg 5:",
     "math :",
     "text :",

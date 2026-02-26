@@ -25,7 +25,7 @@ _LookupYInit = LookupYInit
 _LookupY = LookupY
 
 .segment "DATA"
-.org $9D00
+.org $9D00 - $0800 ;$0800 is cc65's stack size
 lookup_y_low:  .res 256
 lookup_y_high: .res 256
 .reloc

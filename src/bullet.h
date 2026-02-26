@@ -6,6 +6,8 @@
 
 uint8_t BulletManagerInit();
 
+void BulletTick();
+
 
 
 
