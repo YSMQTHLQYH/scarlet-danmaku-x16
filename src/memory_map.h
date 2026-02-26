@@ -233,6 +233,7 @@ idk fam, this sounds like a bad idea from game balance pov
 
 /*    BANKED RAM START     */
 #define MEM_BANK_SPRITE_TABLE   2
+#define MEM_BANK_BULLET_LOOKUP_0    4
 
 /*     BANKED RAM END      */
 

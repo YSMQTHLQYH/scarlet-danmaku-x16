@@ -6,6 +6,7 @@
 #include "graphics_utils.h"
 #include "bitmap_layer.h"
 #include "sprite_manager.h"
+#include "bullet.h"
 
 #include "zsm_player.h"
 #include "text.h"
@@ -290,6 +291,13 @@ static void Init() {
     }
 
 
+    //  ---- bullets
+    s = BulletManagerInit();
+    if (s == 0) {
+        printf("Loaded bullet lookup table\n");
+    } else {
+        printf("Failed to load lookup table\n");
+    }
 
     InputActionInit(0);
 
