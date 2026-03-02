@@ -12,7 +12,7 @@
 #include "text.h"
 
 #include "profiler.h"
-#include "math_tests.h"
+#include "bullet_graphic_tests.h"
 
 
 
@@ -123,7 +123,6 @@ void main() {
     uint8_t test_number = 0;
     char* selected_song = 0;
     uint8_t song_name_length = 0;
-    uint8_t i;
 
     // emulator debug  mode
     *(uint8_t*)0x9FB0 = 1;
@@ -170,14 +169,14 @@ void main() {
 
     printf("Enter test number:\n");
     if (scanf("%u", &test_number)) {
-        if (test_number >= MATH_TEST_COUNT) test_number = 0;
+        if (test_number >= GFX_TEST_COUNT) test_number = 0;
     }
     printf("Test #: %u", test_number);
 
 
     //    ---- done with placeholder print stuff
 
-    MathTestsinit();
+    GfxTestsinit();
     Init();
 
     // setup for timer
@@ -230,20 +229,12 @@ void main() {
         ProfilerEndSegment();
 
         // segment 5: placeholder dummy
-
-        x16_ram_bank = 3;
-        i = 0;
-        do {
-            if (*(uint8_t*)(0xA400 + i) == 1) {
-                BitmapSetPixel(bitmap_back_buffer, 0x66, (*(uint8_t*)(0xA100 + i) >> 1), *(uint8_t*)(0xA300 + i));
-            }
-            i += 4;
-        } while (i != 0);
-
+        //TestBulletBlit(bitmap_back_buffer);
         ProfilerEndSegment();
 
-        // segment 6: math
-        MathTest(test_number);
+        // segment 6: ~~math~~ graphics test
+        //MathTest(test_number);
+        GfxhTest(test_number);
         ProfilerEndSegment();
 
         // segment 7: profiler print
@@ -336,13 +327,14 @@ char* prf_frame_str[] = {
     "seg 3:",
     "bllts:",
     "seg 5:",
-    "math :",
+    "gfx t:",
     "text :",
 };
 
 char prf_str[] = "----";
 static void PrintPrevProfBlock() {
     static uint8_t created = 0;
+    static uint8_t update_index = 0;
     static uint8_t str_obj[SEGMENT_COUNT + 1] = { 0 };
     uint8_t i;
     _uConv16 t;
@@ -355,15 +347,21 @@ static void PrintPrevProfBlock() {
         SpriteObjectSetPosition(str_obj[i], 272, 104 + (i << 3));
         created = 1;
     }
+    /*
     for (i = 0; i < SEGMENT_COUNT; i++) {
         t.w = profiler_segment_previous[i];
         StrUint16Hex(t.w, prf_str);
         PrintSpriteStr(str_obj[i], prf_str);
         //Print2BppBitmapStr(prf_str, bitmap_front_buffer, 62, 170 + (i << 3));
     }
+    */
+    t.w = profiler_segment_previous[update_index];
+    StrUint16Hex(t.w, prf_str);
+    PrintSpriteStr(str_obj[update_index++], prf_str);
+    if (update_index >= SEGMENT_COUNT) { update_index = 0; }
     // total
     StrUint16Hex(profiler_previous_total, prf_str);
-    PrintSpriteStr(str_obj[i], prf_str);
+    PrintSpriteStr(str_obj[SEGMENT_COUNT], prf_str);
 
 }
 

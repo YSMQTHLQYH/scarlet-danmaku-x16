@@ -8,6 +8,8 @@ uint8_t BulletManagerInit();
 
 void BulletTick();
 
+//void TestBulletBlit(uint8_t buffer_n, uint8_t x, uint8_t y);
+void TestBulletBlit(uint8_t buffer_n);
 
 
 
