@@ -98,8 +98,10 @@ void SpriteObjectSetAddr(uint8_t obj_index, uint8_t sheet_n, uint8_t* data) {
         sprite_attr_addr_l[I] = *(PTR++);
         sprite_attr_addr_h[I] = sheet_n;
     }
-    if (I > 1) {
+    if (sprite_object[obj_index].count > 1) {
         //CONV.l = sprite_object[obj_index].spr_index + sprite_object[obj_index].count; // zpc0.l is still this
+        //nvm off by one error?
+        CONV.l--;
         CONV.h = SPRITE_ATTR_ADDR_L;
         SpriteManagerNotifyChanged(CONV.w);
         CONV.h = SPRITE_ATTR_ADDR_H;
@@ -189,7 +191,7 @@ void SpriteObjectSetPosition(uint8_t obj_index, uint16_t x, uint16_t y) {
         CONV_X.w = x;
     }
     //if (sprite_object[obj_index].count > 1) { // already exited early becasue of this
-    CONV_AUX.l = sprite_object[obj_index].spr_index + sprite_object[obj_index].count;
+    CONV_AUX.l = sprite_object[obj_index].spr_index + sprite_object[obj_index].count - 1;
     CONV_AUX.h = SPRITE_ATTR_X_L;
     SpriteManagerNotifyChanged(CONV_AUX.w);
     CONV_AUX.h = SPRITE_ATTR_X_H;
@@ -217,42 +219,46 @@ void SpriteObjectSetPosition(uint8_t obj_index, uint16_t x, uint16_t y) {
 }
 
 void SpriteObjectSetZFlip(uint8_t obj_index, uint8_t z) {
-#define CONV    zpc0
-    uint8_t i, top_index;
+#define CONV        zpc0
+#define TOP_INDEX   zpc0.l
+    uint8_t i;
     if (obj_index >= MAX_SPRITE_OBJECTS) { return; }
     x16_ram_bank = MEM_BANK_SPRITE_TABLE;
-    top_index = sprite_object[obj_index].spr_index + sprite_object[obj_index].count;
-    for (i = sprite_object[obj_index].spr_index; i < top_index; i++) {
+    TOP_INDEX = sprite_object[obj_index].spr_index + sprite_object[obj_index].count;
+    for (i = sprite_object[obj_index].spr_index; i < TOP_INDEX; i++) {
         sprite_attr_z_flip[i] = z;
     }
     CONV.h = SPRITE_ATTR_Z_FLIP;
-    if (i > 1) {
-        CONV.l = top_index;
+    if (sprite_object[obj_index].count > 1) {
+        CONV.l--; //this is already TOP_INDEX
         SpriteManagerNotifyChanged(CONV.w);
     }
     CONV.l = sprite_object[obj_index].spr_index;
     SpriteManagerNotifyChanged(CONV.w);
+#undef TOP_INDEX
 #undef CONV
 }
 void SpriteObjectSetSizePalette(uint8_t obj_index, uint8_t size, uint8_t palette) {
-#define CONV    zpc0
-    uint8_t i, a, top_index;
+#define CONV        zpc0
+#define TOP_INDEX   zpc0.l
+    uint8_t i, a;
     if (obj_index >= MAX_SPRITE_OBJECTS) { return; }
     x16_ram_bank = MEM_BANK_SPRITE_TABLE;
     a = palette & 0x0F;
     sprite_object[obj_index].spr_size = size;
     a += size << 4;
-    top_index = sprite_object[obj_index].spr_index + sprite_object[obj_index].count;
-    for (i = sprite_object[obj_index].spr_index; i < top_index; i++) {
+    TOP_INDEX = sprite_object[obj_index].spr_index + sprite_object[obj_index].count;
+    for (i = sprite_object[obj_index].spr_index; i < TOP_INDEX; i++) {
         sprite_attr_size_palette[i] = a;
     }
     CONV.h = SPRITE_ATTR_SIZE_PALETTE;
-    if (i > 1) {
-        CONV.l = top_index;
+    if (sprite_object[obj_index].count > 1) {
+        CONV.l--; //this is already TOP_INDEX
         SpriteManagerNotifyChanged(CONV.w);
     }
     CONV.l = sprite_object[obj_index].spr_index;
     SpriteManagerNotifyChanged(CONV.w);
+#undef TOP_INDEX
 #undef CONV
 }
 

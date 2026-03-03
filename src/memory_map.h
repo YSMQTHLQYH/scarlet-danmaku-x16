@@ -17,6 +17,7 @@ A: sprites have to registers for the address of the graphics data, annoyingly it
 (Not what you would expect it to be), bit shifting by the specific number every time we deal with sprites will be annoying
 incrementing the high byte increases the address by 0x2000, which is 8KB
 this means we can just store "sheet number" and the index inside the sheet, which would map exactly to the high and low bytes respectively
+(sheet number is 0-7 for page 0, 8-15 for page 1)
 B: having sprite sheet be same size as ram bank will make it easier to load the entire game into high ram at boot
 not strictly needed but it simplifies the logic as we only need to store bank number of each spritesheet
 
@@ -83,8 +84,13 @@ the space stolen from side of bitmap is probably going to bleed into this part t
 the continuation of the game area's bitmap is still up for grabs
 */
 
+//  ---- HUD spritesheet
+#define MEM_VRAM_1_HUD_SPRITESHEET_START    0xA000
+#define MEM_VRAM_1_HUD_SPRITESHEET_END      0xBFFF
+#define HUD_SPRITESHEET_NUMBER              13
+
 //  ---- Unused 2
-#define MEM_VRAM_1_UNUSED_2_START   0xA000
+#define MEM_VRAM_1_UNUSED_2_START   0xC000
 #define MEM_VRAM_1_UNUSED_2_END     0xEFFF
 
 
@@ -226,8 +232,8 @@ idk fam, this sounds like a bad idea from game balance pov
 
 
 /*      LOW RAM START      */
-#define MEM_Y_LOOKUP_START  0x9D00
-#define MEM_Y_LOOKUP_END    0x9EFF
+#define MEM_Y_LOOKUP_START  0x9500
+#define MEM_Y_LOOKUP_END    0x96FF
 
 /*       LOW RAM END       */
 

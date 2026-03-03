@@ -100,9 +100,13 @@ uint8_t KernalJoystickGet(uint8_t joystick_n, uint8_t* mask_0, uint8_t* mask_1) 
 //  ---- files
 
 
-uint8_t load_file(_sFileLoadCtx* ctx) {
+uint8_t LoadFile(_sFileLoadCtx* ctx) {
     // file name
     _uConv16 w;
+
+    //the fucntion in KERNAL is dumb and can't set vera properly :/
+    VERA_CTRL = 0;
+
     w.w = (uint16_t)ctx->filename;
     a0 = w.l;
     a1 = w.h;
@@ -142,12 +146,12 @@ uint8_t load_file(_sFileLoadCtx* ctx) {
     w.h = a1;
     ctx->file_end = (void*)w.w;
 
-    return 1;
+    return 0;
 jmp_load_error:
     // return error code
     asm("sta %v", a2);
     ctx->error_code = a2;
-    return 0;
+    return 1;
 }
 
 

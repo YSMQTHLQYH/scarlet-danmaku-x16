@@ -49,8 +49,8 @@ typedef struct {
 }_sFileLoadCtx;
 
 
-// returns 0 if error, 1 if success
-uint8_t load_file(_sFileLoadCtx* ctx);
+// returns 1 if error, 0 if success
+uint8_t LoadFile(_sFileLoadCtx* ctx);
 
 //  ---- memory
 

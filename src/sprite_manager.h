@@ -8,8 +8,8 @@
 
 // sprite writes to VRAM are buffered here and written all at once to reduce overhead of setting Vera's data addr
 // there's probably a compsci term for doing it like this
-extern _sSpriteAttr _sprite_attr_lowest_changed;
-extern _sSpriteAttr _sprite_attr_highest_changed;
+extern _sSpriteAttr sprite_attr_lowest_changed;
+extern _sSpriteAttr sprite_attr_highest_changed;
 typedef enum {
     SPRITE_ATTR_ADDR_L,
     SPRITE_ATTR_ADDR_H,
@@ -63,7 +63,9 @@ typedef struct {
 extern _sSpriteObject* sprite_object;
 // creates a (multi)sprite object
 // priority is if it should render in front or behind already existing sprites (or an specific index)
-// rest ofarguments are the same that get written object struct
+// count is TOTAL number of sprites used
+// width is number of sprites per row (height is inplied)
+// spr_size is height/width, 2 bits each (same format that goes into vram) (used for position of multi sprite objects)
 // returns object index (or 0xFF if it failed)
 uint8_t CreateSpriteObject(uint8_t priority, uint8_t count, uint8_t width, uint8_t spr_size);
 void FreeSpriteObject(uint8_t index);

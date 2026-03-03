@@ -6,6 +6,8 @@
 #include "graphics_utils.h"
 #include "bitmap_layer.h"
 #include "sprite_manager.h"
+#include "hud.h"
+
 #include "bullet.h"
 
 #include "zsm_player.h"
@@ -45,7 +47,7 @@ void test_sprite() {
         pl.dest_addr = (void*)MEM_VRAM_1_KERNAL_CHARSET_START;
         pl.header_mode = FILE_LOAD_HEADERLESS;
         pl.target_mode = FILE_LOAD_VRAM_P1;
-        if (!load_file(&pl)) {
+        if (LoadFile(&pl)) {
             EMU_DEBUG_1(0xFA);
             EMU_DEBUG_1(pl.error_code);
         }
@@ -54,7 +56,7 @@ void test_sprite() {
         pl.dest_addr = (void*)(MEM_VRAM_0_UNUSED_2_START + 4096);
         pl.header_mode = FILE_LOAD_HEADERLESS;
         pl.target_mode = FILE_LOAD_VRAM_P0;
-        if (!load_file(&pl)) {
+        if (LoadFile(&pl)) {
             EMU_DEBUG_1(0xFA);
             EMU_DEBUG_1(pl.error_code);
         }
@@ -86,7 +88,7 @@ void test_sprite() {
     addr.w >>= 5;
     VERA_DATA0 = addr.l; // addr 12-5
     VERA_DATA0 = addr.h | 0x80; // addr 16-13
-    VERA_DATA0 = 0xE4;//x
+    VERA_DATA0 = 0xC4;//x
     VERA_DATA0 = 0;
     VERA_DATA0 = 0x100;//y
     VERA_DATA0 = 0;
@@ -99,7 +101,6 @@ void test_sprite() {
 }
 
 static void Init();
-static void PrintPrevProfBlock();
 static void PrintProfilerBitmapFrame(uint8_t buffer_n);
 
 
@@ -118,6 +119,7 @@ uint8_t lag_so = 0, wc_so = 0;
 
 uint8_t show_debug = 1;
 uint8_t last_tick = 0, current_tick = 0;
+
 void main() {
     uint16_t wait_count = 0, lag_count = 0;
     uint8_t test_number = 0;
@@ -187,8 +189,7 @@ void main() {
         ProfilerBeginBlock();
         // segment 0: clear buffer
         BitmapSwapBuffers();
-        //BitmapLayerFillRect(bitmap_back_buffer, 1, 0, 0, 224, 240);
-        BitmapLayerClearGameArea(bitmap_back_buffer, 1);
+        BitmapLayerClearGameArea(bitmap_back_buffer, 11);
         ProfilerEndSegment();
 
         // segment 1: music
@@ -229,7 +230,7 @@ void main() {
         ProfilerEndSegment();
 
         // segment 5: placeholder dummy
-        //TestBulletBlit(bitmap_back_buffer);
+        TestBulletBlit(bitmap_back_buffer);
         ProfilerEndSegment();
 
         // segment 6: ~~math~~ graphics test
@@ -301,11 +302,6 @@ static void Init() {
     //  ---- sprites
     SpriteManagerInit();
 
-    lag_so = CreateSpriteStr(SPR_PRIORITY_HIGH, 2, 0x0C, 3);
-    wc_so = CreateSpriteStr(SPR_PRIORITY_HIGH, 4, 0x0C, 3);
-    SpriteObjectSetPosition(lag_so, 288, 210);
-    SpriteObjectSetPosition(wc_so, 272, 226);
-
     //  ---- graphics
     VERA_CTRL = 0x00;
     VERA_DC0_VIDEO = 0x61;
@@ -313,13 +309,21 @@ static void Init() {
     VERA_DC0_VSCALE = 64;
 
     BitmapInit(0);
-    PrintProfilerBitmapFrame(0);
-    PrintProfilerBitmapFrame(1);
+    //PrintProfilerBitmapFrame(0);
+    //PrintProfilerBitmapFrame(1);
+
+    //hud
+    lag_so = CreateSpriteStr(SPR_PRIORITY_HIGH, 2, 0x0C, 15);
+    wc_so = CreateSpriteStr(SPR_PRIORITY_HIGH, 4, 0x0C, 15);
+    SpriteObjectSetPosition(lag_so, 260, 214);
+    SpriteObjectSetPosition(wc_so, 260, 226);
+
+    HudInit();
 
     SetColorPalette(15, color_palette);
 }
 
-#define SEGMENT_COUNT   8
+
 char* prf_frame_str[] = {
     "clear:",
     "music:",
@@ -331,48 +335,13 @@ char* prf_frame_str[] = {
     "text :",
 };
 
-char prf_str[] = "----";
-static void PrintPrevProfBlock() {
-    static uint8_t created = 0;
-    static uint8_t update_index = 0;
-    static uint8_t str_obj[SEGMENT_COUNT + 1] = { 0 };
-    uint8_t i;
-    _uConv16 t;
-    if (!created) {
-        for (i = 0; i < SEGMENT_COUNT; i++) {
-            str_obj[i] = CreateSpriteStr(SPR_PRIORITY_HIGH, 4, 0x0C, 3);
-            SpriteObjectSetPosition(str_obj[i], 272, 100 + (i << 3));
-        }
-        str_obj[i] = CreateSpriteStr(SPR_PRIORITY_HIGH, 4, 0x0C, 3);
-        SpriteObjectSetPosition(str_obj[i], 272, 104 + (i << 3));
-        created = 1;
-    }
-    /*
-    for (i = 0; i < SEGMENT_COUNT; i++) {
-        t.w = profiler_segment_previous[i];
-        StrUint16Hex(t.w, prf_str);
-        PrintSpriteStr(str_obj[i], prf_str);
-        //Print2BppBitmapStr(prf_str, bitmap_front_buffer, 62, 170 + (i << 3));
-    }
-    */
-    t.w = profiler_segment_previous[update_index];
-    StrUint16Hex(t.w, prf_str);
-    PrintSpriteStr(str_obj[update_index++], prf_str);
-    if (update_index >= SEGMENT_COUNT) { update_index = 0; }
-    // total
-    StrUint16Hex(profiler_previous_total, prf_str);
-    PrintSpriteStr(str_obj[SEGMENT_COUNT], prf_str);
-
-}
-
-
 static void PrintProfilerBitmapFrame(uint8_t buffer_n) {
     uint8_t i;
     Print4BppBitmapStr("\"profiler\"", buffer_n, 112, 72);
     Print4BppBitmapStr("time", buffer_n, 112, 80);
     Print4BppBitmapStr("(scanlines)", buffer_n, 112, 88);
 
-    for (i = 0; i < SEGMENT_COUNT; i++) {
+    for (i = 0; i < PROFILER_SEGMENT_COUNT; i++) {
         Print4BppBitmapStr(prf_frame_str[i], buffer_n, 112, 100 + (i << 3));
     }
     Print4BppBitmapStr("total:", buffer_n, 112, 104 + (i << 3));

@@ -70,21 +70,23 @@ sprite_attr_highest_changed: .res 8, $00
     ; setup vera
     lda #0
     sta _VERA_CTRL
-    lda #(VERA_ADDR_INC_8 | 1)
-    sta _VERA_ADDRx_H
     ; outter loop (attr_n)
     ldy #0
 @attr_loop:
+    lda #(VERA_ADDR_INC_8 | 1)  ;this is *inside* the loop because of demonic bug
+    sta _VERA_ADDRx_H           ;vera increment loops back to $0:0000 if going past end of table
     phy; outter loop index
     ; checks if there's anything to write for attr[y]
     ; we do have something to write if 
     ; _sprite_attr_lowest_changed <= _sprite_attr_highest_changed
     lda _sprite_attr_highest_changed, y
+    ;sta $9fb9
     cmp _sprite_attr_lowest_changed, y; C = 1 if A >= v, C = 0 if A < v
     bcc @skip ;branc if _sprite_attr_highest_changed < _sprite_attr_lowest_changed
     ; we DO have something to write
     pha ;highest to check during loop, should be stored into _zpa0 but we need that for something else
     lda _sprite_attr_lowest_changed, y
+    ;sta $9fba
     pha ;index starts at lowest (same as highest, pull from stack fist)
     ; VRAM addr, low byte is lowest_n (already in A) * 8 (<<3)
     ldx #VERA_SPRITE_ATTR_M
@@ -112,6 +114,8 @@ sprite_attr_highest_changed: .res 8, $00
     ; actually does the writes (finally)
     iny
     lda (_zptr0), y ; loads byte from high ram table
+    ;sty $9fb9
+    ;sta $9fba
     sta _VERA_DATA0 ; writes it to vera, autoinc already set for next sprite
     cpy _zpa0 ;C = 0 if Y < highest
     bcc @spr_loop
@@ -121,7 +125,7 @@ sprite_attr_highest_changed: .res 8, $00
     ;skipping from $A080 to $A100, makes writting faster at the cost of using more memory
     ; basically pretending we have up to 256 sprites
     inc _zptr0 + 1
-@no_clear:
+;@no_clear: ;i dont rember what this was for
     ; iteration count
     ply
     iny

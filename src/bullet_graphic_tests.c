@@ -3,7 +3,7 @@
 #include "zp_utils.h"
 #include "bitmap_layer.h"
 
-uint8_t calculate_cache_mask(uint8_t m);
+static uint8_t calculate_cache_mask(uint8_t m);
 
 #define TEST_SIZE   128
 uint8_t* test_arr_x = (uint8_t*)0xB000;
@@ -11,8 +11,8 @@ uint8_t* test_arr_y = (uint8_t*)0xB800;
 #define TEST_ADDR_M (uint8_t)0x96
 
 uint8_t stamp[4] = { 0x06, 0xEE, 0xE6, 0x00 };
-uint8_t cache_mask[6][4] = { 0 };
-uint8_t cache_mask_readable[6][4] = {
+static uint8_t cache_mask[6][4] = { 0 };
+static uint8_t cache_mask_readable[6][4] = {
     // first 4 only need one write
     {0x8F, 0xC7, 0xE3, 0xF1},
     {0x07, 0x83, 0xC1, 0xE0},
@@ -23,8 +23,8 @@ uint8_t cache_mask_readable[6][4] = {
     {0xFF, 0x7F, 0x3F, 0x1F},
     {0x7F, 0x3F, 0x1F, 0x0F},
 };
-uint8_t poly_cache_mask[4][8] = { 0 };
-uint8_t poly_cache_mask_readable[4][8] = {
+static uint8_t poly_cache_mask[4][8] = { 0 };
+static uint8_t poly_cache_mask_readable[4][8] = {
     // first column
     {0x8F, 0xC7, 0xE3, 0xF1, 0xF8, 0xFC, 0xFE, 0xFF},
     {0x07, 0x83, 0xC1, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE},
@@ -74,7 +74,7 @@ void GfxTestsinit() {
 // turns mask_human_readable into mask for vera fx cache writes
 // bit 7 for leftmost pixel, bit 6 for secondleftmost pixel, etc
 // 0 is write, 1 is mask away
-uint8_t calculate_cache_mask(uint8_t m) {
+static uint8_t calculate_cache_mask(uint8_t m) {
     uint8_t o = 0;
     if (m & 0x80) o |= 0x02;
     if (m & 0x40) o |= 0x01;

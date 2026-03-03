@@ -102,7 +102,7 @@ uint8_t ZsmLoad(char* file_name, uint8_t name_length, uint8_t dest_bank) {
     fl.target_mode = FILE_LOAD_RAM;
     fl.dest_addr = (void*)ZSM_START;
     x16_ram_bank = dest_bank;
-    if (load_file(&fl)) {
+    if (!LoadFile(&fl)) {
         // load success
 
         // load function handles ram_bank and leaves it at the end of file
