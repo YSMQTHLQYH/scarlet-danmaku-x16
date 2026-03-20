@@ -8,10 +8,12 @@
 .importzp _zpa0, _zpa1, _zpc0
 
 SCREEN_WIDTH_BYTES = 160
+GAME_AREA_WIDTH_BYTES = 112
 ;constants that ca65 cant realize is just a number
 .importzp VERA_ADDR_INC_4
 .importzp MEM_BITMAP_1_ADDR_M
 
+.export GAME_AREA_WIDTH_BYTES
 
 .export _BitmapLayerFillRect
 .export _BitmapLayerClearGameArea

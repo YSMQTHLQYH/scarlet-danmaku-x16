@@ -15,6 +15,8 @@ conviniently we have frame buffer 0 on VRAM page 0 and frame buffer 1 on VRAM pa
 #define BITMAP_PIXELS_PER_BYTE  2 // inverse of BITMAP_BPP I guess
 #define BITMAP_WIDTH_BYTES      160 // BITMAP_WIDTH / BITMAP_PIXELS_PER_BYTE, don't trust the compiler enough
 
+#define BITMAP_GAME_AREA_WIDTH_BYTES    112
+
 
 // uses zpc0, zpa0 and zpa1!
 extern void fastcall BitmapLayerFillRect(uint8_t buffer_n, uint8_t color, uint8_t x, uint8_t y, uint8_t w, uint8_t h);

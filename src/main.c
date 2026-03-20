@@ -18,7 +18,7 @@
 
 
 
-
+void TestSpawnBullets();
 void test_sprite() {
     static uint16_t x = 100, y = 200;
     static uint8_t b = 0, frame = 0, p_obj = 0;
@@ -180,7 +180,7 @@ void main() {
 
     GfxTestsinit();
     Init();
-
+    //VERA_IRQLINE_L = 10;
     // setup for timer
     last_tick = frame_count;
 
@@ -230,7 +230,10 @@ void main() {
         ProfilerEndSegment();
 
         // segment 5: placeholder dummy
-        TestBulletBlit(bitmap_back_buffer);
+        //TestBulletBlit(bitmap_back_buffer);
+        if (IsActionJustPressed(ACTION_START)) {
+            TestSpawnBullets();
+        }
         ProfilerEndSegment();
 
         // segment 6: ~~math~~ graphics test
@@ -323,7 +326,23 @@ static void Init() {
     SetColorPalette(15, color_palette);
 }
 
+void TestSpawnBullets() {
+    _sBulletSpawnCfg cfg = { 0 };
 
+    cfg.count = 12;
+    cfg.graphic_type = BULLET_GRAPHIC_DUMMY;
+    cfg.color = 1;
+    cfg.count_per_subblock = 0;
+
+    cfg.x_start = 100;
+    cfg.y_start = 100;
+    cfg.angle_start = 0;
+    cfg.angle_offset = 2;
+    cfg.speed_start = 3;
+
+    SpawnBulletBlock(&cfg);
+}
+/*
 char* prf_frame_str[] = {
     "clear:",
     "music:",
@@ -359,4 +378,4 @@ static void PrintProfilerBitmapFrame(uint8_t buffer_n) {
         Print4BppBitmapStr("1", 1, 134, 62);
     }
 }
-
+*/

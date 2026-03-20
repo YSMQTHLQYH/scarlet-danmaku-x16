@@ -6,11 +6,103 @@
 
 
 /*
+position/velocity format in VRAM
+py_l, vy_l, py_h, vy_h, px_l, vx_l, px_h, vx_h
+py_h of 0xFF to mark bullet as not existing/deleted
+arranged 160 bytes appart, as they are in the "bitmap" area of vram, vertically behind hud
+*/
+/*
 lookup table format
 256 possible angles, index in array is angle, different array for each speed
 array order is x_low, x_high, y_low, y_high
 1KB in total per speed, 8 speeds per ram bank
 */
+
+void SpawnBulletBlock(_sBulletSpawnCfg* cfg) {
+#define ANGLE   zpa6
+#define SPEED   zpa5
+#define TABLE_PTR   zptr3
+    register uint8_t i;
+    uint8_t index;
+
+    // find empty block
+    for (index = 0; index < BULLET_BLOCK_COUNT; index++) {
+        if (bullet_block[index].remaining_bullets == 0) goto found_block;
+    }
+    // no empty bullet block
+    return;
+
+found_block:
+    bullet_block[index].remaining_bullets = cfg->count;
+    bullet_block[index].graphic_type = cfg->graphic_type;
+    bullet_block[index].color = cfg->color;
+
+    VERA_CTRL = 0;
+    VERA_ADDRx_H = ADDR_INC_160;
+    VERA_ADDRx_M = 0;
+    VERA_ADDRx_L = BITMAP_GAME_AREA_WIDTH_BYTES + index;
+
+    x16_ram_bank = MEM_BANK_BULLET_LOOKUP_0;
+
+    ANGLE = cfg->angle_start;
+    SPEED = cfg->speed_start;
+    for (i = 0; i < BULLETS_PER_BLOCK; i++) {
+        if (i >= cfg->count) {
+            // not actually a bullet, fill it with zeros
+            asm("lda #$FF");
+            //y
+            asm("stz %v", VERA_DATA0);
+            asm("stz %v", VERA_DATA0);
+            asm("sta %v", VERA_DATA0); //py_h == 0xFF
+            asm("stz %v", VERA_DATA0);
+            //x
+            asm("stz %v", VERA_DATA0);
+            asm("stz %v", VERA_DATA0);
+            asm("stz %v", VERA_DATA0);
+            asm("stz %v", VERA_DATA0);
+        } else {
+            //TODO: make this properly
+
+            // angle (low byte of table addr)
+            asm("lda %v", ANGLE);
+            asm("sta %v", TABLE_PTR);
+
+            // speed (high byte of addr, starts at A0 and increments by 4)
+            asm("lda %v", SPEED);
+            // check for table bank here probably
+            asm("and #$07"); // speed is in range 0-7 per table
+            asm("asl");
+            asm("asl"); // mult by 4 (increment)
+            asm("clc");
+            asm("adc #$A2"); //starts with y_l (byte 2)
+            asm("sta %v + 1", TABLE_PTR);
+
+            VERA_DATA0 = 0; //py_l
+            VERA_DATA0 = *TABLE_PTR; //vy_l
+            VERA_DATA0 = cfg->y_start; //py_h
+            // oh come on VScode, what even is the "error" now?
+            TABLE_PTR |= 0x0300; // modifying pointer directly, setting bits of high byte to 0b11
+            VERA_DATA0 = *TABLE_PTR; //vy_h
+
+            VERA_DATA0 = 0; //px_l
+            TABLE_PTR &= 0xFCFF; // clearing bottom two bits of high byte
+            VERA_DATA0 = *TABLE_PTR; //vx_l
+            VERA_DATA0 = cfg->x_start; //px_h
+            TABLE_PTR |= 0x0100;
+            VERA_DATA0 = *TABLE_PTR; //vx_h
+
+
+            // set up next
+            ANGLE += cfg->angle_offset;
+            SPEED += cfg->speed_offset;
+        }
+    }
+#undef TABLE_PTR
+#undef SPEED
+#undef ANGLE
+}
+
+
 
 // test bullet draw
 static uint8_t calculate_cache_mask(uint8_t m);
@@ -42,6 +134,13 @@ uint8_t BulletManagerInit() {
     err = LoadFile(&fl);
     if (err) {
         return 1;
+    }
+
+    //bullet blocks
+    for (i = 0; i < BULLET_BLOCK_COUNT; i++) {
+        bullet_block[i].color = 0;
+        bullet_block[i].graphic_type = BULLET_GRAPHIC_DUMMY;
+        bullet_block[i].remaining_bullets = 0;
     }
 
     //mask for cache writes
@@ -273,7 +372,7 @@ void TestBulletBlit(uint8_t buffer_n) {
     VERA_CTRL = 0;
 }
 
-void BulletTick() {
+static void TestBulletTick() {
     asm("ldy #0");
 
     asm("ldx #3");
@@ -339,4 +438,17 @@ skip:
     asm("iny");
     asm("iny");
     asm("bne %g", loop);
+}
+
+
+
+void BulletTick() {
+    uint8_t i;
+    TestBulletTick();
+    for (i = 0; i < BULLET_BLOCK_COUNT; i++) {
+        if (bullet_block[i].remaining_bullets > 0) {
+            EMU_DEBUG_1(i);
+            BulletBlockTick(i);
+        }
+    }
 }
