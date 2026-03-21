@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define BULLETS_PER_BLOCK   32
-#define BULLET_BLOCK_COUNT  32
+#define BULLET_BLOCK_COUNT  48
 
 /* These HAVE to be multiples of two or everyhing explodes*/
 typedef enum {

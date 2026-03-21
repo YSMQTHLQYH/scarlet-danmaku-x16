@@ -9,6 +9,7 @@
 #include "hud.h"
 
 #include "bullet.h"
+#include "player.h"
 
 #include "zsm_player.h"
 #include "text.h"
@@ -17,6 +18,8 @@
 #include "bullet_graphic_tests.h"
 
 
+
+_sPlayer player = { 0 };
 
 void TestSpawnBullets();
 void test_sprite() {
@@ -42,15 +45,7 @@ void test_sprite() {
                 VERA_DATA0 = c;
             }
         }
-        pl.filename = "test assets/testplayer.bin";
-        pl.name_lenght = 12 + 14;
-        pl.dest_addr = (void*)MEM_VRAM_1_KERNAL_CHARSET_START;
-        pl.header_mode = FILE_LOAD_HEADERLESS;
-        pl.target_mode = FILE_LOAD_VRAM_P1;
-        if (LoadFile(&pl)) {
-            EMU_DEBUG_1(0xFA);
-            EMU_DEBUG_1(pl.error_code);
-        }
+
         pl.filename = "test assets/programmerart.bin";
         pl.name_lenght = 12 + 17;
         pl.dest_addr = (void*)(MEM_VRAM_0_UNUSED_2_START + 4096);
@@ -61,19 +56,9 @@ void test_sprite() {
             EMU_DEBUG_1(pl.error_code);
         }
 
-        p_obj = CreateSpriteObject(SPR_PRIORITY_HIGH, 1, 1, 0b1010);
-        addr.w = MEM_VRAM_1_KERNAL_CHARSET_START >> 5;
-        addr.h |= 0x08; // addr bit 16
-        SpriteObjectSetAddr(p_obj, addr.h | 0x00, &addr.l);
-        SpriteObjectSetZFlip(p_obj, 0x0C);
-        SpriteObjectSetSizePalette(p_obj, 0b1010, 15);
+
 
     }
-    if (IsActionPressed(ACTION_LEFT))x--;
-    if (IsActionPressed(ACTION_RIGHT))x++;
-    if (IsActionPressed(ACTION_UP))y--;
-    if (IsActionPressed(ACTION_DOWN))y++;
-    SpriteObjectSetPosition(p_obj, x, y);
 
 
     // set up hardware sprite
@@ -236,11 +221,14 @@ void main() {
         if (IsActionJustPressed(ACTION_START)) {
             TestSpawnBullets();
         }
+
         ProfilerEndSegment();
 
         // segment 6: ~~math~~ graphics test
         //MathTest(test_number);
         GfxhTest(test_number);
+        // MAKE SURE THIS IS *AFTER* BULLET TICK
+        PlayerTick(&player);
         ProfilerEndSegment();
 
         // segment 7: profiler print
@@ -272,12 +260,7 @@ void main() {
 
 }
 
-uint16_t color_palette[] = {
-    0x2A3, 0xBD2, 0xEFC, 0x6EF,
-    0xFD4, 0xFAD, 0x2EC, 0x0AC,
-    0xF93, 0xE36, 0xC3B, 0x168,
-    0xE53, 0xA23, 0x739, 0x214,
-};
+
 static void Init() {
     uint8_t s;
     //  ---- IRQ
@@ -323,17 +306,16 @@ static void Init() {
     SpriteObjectSetPosition(lag_so, 260, 214);
     SpriteObjectSetPosition(wc_so, 260, 226);
 
-    HudInit();
+    PlayerInit(&player);
 
-    SetColorPalette(15, color_palette);
+    HudInit();
 }
 
 void TestSpawnBullets() {
     _sBulletSpawnCfg cfg = { 0 };
 
-    cfg.count = 12;
+    cfg.count = 32;
     cfg.graphic_type = BULLET_GRAPHIC_PIXEL;
-    cfg.color = 1;
     cfg.count_per_subblock = 0;
 
     asm("jsr $FECF"); //random
@@ -341,11 +323,16 @@ void TestSpawnBullets() {
     asm("stx %v", zpa1);
     asm("sty %v", zpa2);
 
-    cfg.x_start = zpa0 & 0x7F;
-    cfg.y_start = 100;
+    cfg.x_start = (zpa0 & 0x3F) + 64;
+    cfg.y_start = (zpa2 & 0x0F) + 90;
     cfg.angle_start = zpa1;
-    cfg.angle_offset = 2;
+    cfg.angle_offset = 3;
     cfg.speed_start = zpa2 & 0x07;
+
+    zpa2 &= 0x0F;
+    zpa2 |= (zpa2 << 4);
+    if (zpa2 == 0)zpa2 = 0x11;
+    cfg.color = zpa2;
 
     SpawnBulletBlock(&cfg);
 }

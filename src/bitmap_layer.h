@@ -24,7 +24,6 @@ extern void fastcall BitmapLayerFillRect(uint8_t buffer_n, uint8_t color, uint8_
 extern void fastcall BitmapLayerClearGameArea(uint8_t buffer_n, uint8_t color);
 extern uint16_t fastcall LookupY(uint8_t y);
 
-extern uint16_t lookup_bitmap_y[BITMAP_HEIGHT];
 
 // buffer currently being displayed (should NOT be written to)
 extern uint8_t bitmap_front_buffer;

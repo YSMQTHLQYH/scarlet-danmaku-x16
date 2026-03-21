@@ -52,7 +52,7 @@ uint8_t HudInit() {
     if (back_sprite_object == 0xFF) { return 1; }
     SpriteObjectSetAddr(back_sprite_object, HUD_SPRITESHEET_NUMBER, (uint8_t*)back_sprite_addr_data);
     SpriteObjectSetPosition(back_sprite_object, 224, -16);
-    SpriteObjectSetZFlip(back_sprite_object, 0b1000);
+    SpriteObjectSetZFlip(back_sprite_object, 0b1100);
     SpriteObjectSetSizePalette(back_sprite_object, 0b1110, HUD_PALETTE);
     // manually set size of sprites on the right to 64x64
     sprite_attr_size_palette[121] |= 0xF0;

@@ -149,7 +149,7 @@ void Print2BppBitmapStr(char* str, uint8_t buffer_n, uint8_t x, uint8_t y) {
         font_addr.u16 = (next_char << 4);
         font_addr.u8_h += MEM_2BPP_FONT_1_ADDR_M;
         // get address of target starting pixel
-        pixel_addr.u16 = lookup_bitmap_y[y];
+        pixel_addr.u16 = LookupY(y);
         pixel_addr.u16 += (x >> 1) + i + i;
 
         // setup for even-byte pass
@@ -261,7 +261,7 @@ void Print4BppBitmapStr(char* str, uint8_t buffer_n, uint8_t x, uint8_t y) {
         font_addr.u16 = (next_char << 5);
         font_addr.u8_h += MEM_4BPP_FONT_1_ADDR_M;
         // get address of target starting pixel
-        pixel_addr.u16 = lookup_bitmap_y[y];
+        pixel_addr.u16 = LookupY(y);
         pixel_addr.u16 += x + (i << 2);
 
         // setup for even-byte pass

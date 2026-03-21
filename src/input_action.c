@@ -29,7 +29,11 @@ void InputActionInit(uint8_t joystick_n) {
 	action[ACTION_LEFT].keybind_mask_0 = JOYSTICK_M0_LEFT;
 	action[ACTION_RIGHT].keybind_mask_0 = JOYSTICK_M0_RIGHT;
 	action[ACTION_START].keybind_mask_0 = JOYSTICK_M0_START;
-	action[ACTION_DEBUG].keybind_mask_0 = JOYSTICK_M0_SELECT;
+	action[ACTION_SHOOT].keybind_mask_0 = JOYSTICK_M0_B;
+	action[ACTION_FOCUS].keybind_mask_0 = JOYSTICK_M0_SELECT;
+
+
+	action[ACTION_DEBUG].keybind_mask_1 = JOYSTICK_M1_L;
 
 	for (i = 0; i < ACTION_ID_COUNT; i++) {
 		action[i].joystick_mapped = joystick_n;
@@ -113,7 +117,7 @@ void JoystickDrawToBitmap(uint8_t joystick_n, uint8_t buffer_n, uint8_t x, uint8
 	VERA_ADDRx_H = buffer_n | ADDR_INC_1;
 	addr.h = MEM_BITMAP_1_ADDR_M;
 	addr.l = x;
-	addr.w += lookup_bitmap_y[y];
+	addr.w += LookupY(y);
 
 	// -- draw
 	// L and R
@@ -212,7 +216,7 @@ void InputActionDrawToBitmap(uint8_t buffer_n, uint8_t x, uint8_t y) {
 #endif
 	addr.h = MEM_BITMAP_1_ADDR_M;
 	addr.l = x;
-	addr.w += lookup_bitmap_y[y];
+	addr.w += LookupY(y);
 
 	for (i = 0; i < ACTION_ID_COUNT; i++) {
 		// read input

@@ -444,7 +444,7 @@ skip:
 
 void BulletTick() {
     uint8_t i;
-    TestBulletTick();
+    //TestBulletTick();
     for (i = 0; i < BULLET_BLOCK_COUNT; i++) {
         if (bullet_block[i].remaining_bullets > 0) {
             BulletBlockTick(i);
