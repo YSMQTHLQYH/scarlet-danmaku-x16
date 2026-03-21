@@ -9,22 +9,27 @@
 
 SCREEN_WIDTH_BYTES = 160
 GAME_AREA_WIDTH_BYTES = 112
+GAME_AREA_WIDTH = 224
+GAME_AREA_HEIGHT = 240
 ;constants that ca65 cant realize is just a number
 .importzp VERA_ADDR_INC_4
 .importzp MEM_BITMAP_1_ADDR_M
 
-.export GAME_AREA_WIDTH_BYTES
+.export GAME_AREA_WIDTH_BYTES, GAME_AREA_WIDTH, GAME_AREA_HEIGHT
 
 .export _BitmapLayerFillRect
 .export _BitmapLayerClearGameArea
 .export _BitmapSetPixel
 .export _LookupYInit, _LookupY
+.export _bitmap_front_buffer, _bitmap_back_buffer
 ; underscore for exporting to C
 _BitmapLayerFillRect = BitmapLayerFillRect
 _BitmapLayerClearGameArea = BitmapLayerClearGameArea
 _BitmapSetPixel = BitmapSetPixel
 _LookupYInit = LookupYInit
 _LookupY = LookupY
+_bitmap_front_buffer: .byte $00
+_bitmap_back_buffer:  .byte $00
 
 .segment "DATA"
 .org $9D00 - $0800 ;$0800 is cc65's stack size

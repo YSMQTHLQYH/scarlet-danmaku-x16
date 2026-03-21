@@ -42,7 +42,7 @@ found_block:
     VERA_ADDRx_M = 0;
     VERA_ADDRx_L = BITMAP_GAME_AREA_WIDTH_BYTES + index;
 
-    x16_ram_bank = MEM_BANK_BULLET_LOOKUP_0;
+    x16_ram_bank = MEM_BANK_BULLET_LOOKUP_0 + 1;
 
     ANGLE = cfg->angle_start;
     SPEED = cfg->speed_start;
@@ -447,7 +447,6 @@ void BulletTick() {
     TestBulletTick();
     for (i = 0; i < BULLET_BLOCK_COUNT; i++) {
         if (bullet_block[i].remaining_bullets > 0) {
-            EMU_DEBUG_1(i);
             BulletBlockTick(i);
         }
     }

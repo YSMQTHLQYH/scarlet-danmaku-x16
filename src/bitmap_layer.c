@@ -4,8 +4,8 @@
 
 extern void fastcall LookupYInit();
 
-uint8_t bitmap_front_buffer = 0;
-uint8_t bitmap_back_buffer = 0;
+//uint8_t bitmap_front_buffer = 0;
+//uint8_t bitmap_back_buffer = 0;
 
 uint16_t lookup_bitmap_y[BITMAP_HEIGHT] = { 0 };
 void CalculateYLookup() {

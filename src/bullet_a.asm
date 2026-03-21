@@ -1,9 +1,12 @@
-.importzp _zpa0
+.importzp _zpa0, _zpa1;, _zpc0
 .import _VERA_ADDRx_L, _VERA_ADDRx_M, _VERA_ADDRx_H
 .import _VERA_DATA0, _VERA_DATA1, _VERA_CTRL
 .importzp VERA_ADDR_INC_160, VERA_ADDR_INC_320
 
-.importzp GAME_AREA_WIDTH_BYTES
+.import _bitmap_back_buffer
+.import lookup_y_high, lookup_y_low
+
+.importzp GAME_AREA_WIDTH_BYTES, GAME_AREA_WIDTH, GAME_AREA_HEIGHT
 
 .export _bullet_block
 
@@ -31,7 +34,9 @@ _BulletBlockTick = BulletBlockTick
 ;block index is passed as argument, starts in register A
 .proc BulletBlockTick
     index = _zpa0
+    bullets_left = _zpa1
     sta index
+    stz bullets_left
 
     ;configure vera to read table
     ;DATA0 for reading table, DATA1 for writting updated position
@@ -39,7 +44,9 @@ _BulletBlockTick = BulletBlockTick
     lda #(VERA_ADDR_INC_160 + TABLE_VRAM_PAGE)
     sta _VERA_ADDRx_H
     stz _VERA_ADDRx_M
-    ldx #GAME_AREA_WIDTH_BYTES
+    lda #GAME_AREA_WIDTH_BYTES
+    adc index
+    tax
     stx _VERA_ADDRx_L
 
     lda #1
@@ -53,44 +60,48 @@ _BulletBlockTick = BulletBlockTick
     clc
     lda _VERA_DATA0 ;py_l
     adc _VERA_DATA0 ;vy_l
-    tax
-
+    sta _VERA_DATA1 ;updated py_l
     lda _VERA_DATA0 ;py_h
-    tay
     adc _VERA_DATA0 ;vy_h
-    ;YES we are only checking after doing the first two addition
-    cpy #$FF
-    bne bullet_deleted_check_passed
-    ;bullet deleted, do a dummy pass
-    ;well, the remainer of the pass...
+    ;YES we are only checking after doing the first two additions
+    cmp #GAME_AREA_HEIGHT
+    bcc delete_y_check_passed ;branches if A < value
+    ;bullet deleted, write dummy positions
+    ;actually we don't even bother clearing the subpixel position, should be fine so long speed is less than 7 per frame or so
+    ;do a dummy half pass
     lda _VERA_DATA0 ;px_l
     lda _VERA_DATA0 ;vx_l
     lda _VERA_DATA0 ;px_h
     lda _VERA_DATA0 ;vx_h
-
-    lda #$FF
-    sta _VERA_DATA1 ;py_l
-    sta _VERA_DATA1 ;py_h
-    sta _VERA_DATA1 ;px_l
-    sta _VERA_DATA1 ;px_h
-    pha
-    pha
-
-    bne bullet_update_done
-bullet_deleted_check_passed:
-    stx _VERA_DATA1 ;updated py_l
+    lda #$F7
+    sta _VERA_DATA1
+    bne deleted_dummy_draw
+delete_y_check_passed:
     sta _VERA_DATA1 ;updated py_h
-    pha
+    tay
 
     clc
     lda _VERA_DATA0 ;px_l
     adc _VERA_DATA0 ;vx_l
     sta _VERA_DATA1 ;updated px_l
-
     lda _VERA_DATA0 ;px_h
     adc _VERA_DATA0 ;vx_h
-    sta _VERA_DATA1 ;updated px_H
+
+    cmp #GAME_AREA_WIDTH
+    bcc delete_x_check_passed ;branches if A < value
+    ; bullet outside in x axis, delete bullet
+    lda #$F7
+    deleted_dummy_draw:
+    sta _VERA_DATA1 ;px_h
     pha
+    pha
+
+    bne bullet_update_done
+delete_x_check_passed:
+    sta _VERA_DATA1 ;updated px_H
+    pha ;px
+    phy ;py
+    inc bullets_left
 bullet_update_done:
 
 
@@ -102,6 +113,9 @@ bullet_update_done:
     adc index
     tay ;start of _bullet_block[index]
 
+    lda bullets_left
+    sta _bullet_block, y
+    
     iny
     ldx _bullet_block, y
 
@@ -110,17 +124,43 @@ bullet_update_done:
 
 
 .proc GraphicDummy
-    pla
-    sta $9FB9
-    pla
-    sta $9FB9
+    pla ;py
+    pla ;px
     rts
 .endproc
 
 .proc GraphicPixel
-    pla
-    sta $9FB9
-    pla
-    sta $9FBA
+    aux = _zpa0
+    stz _VERA_CTRL
+    lda _bitmap_back_buffer
+    sta _VERA_ADDRx_H
+
+    ply ;py
+    pla ;px
+    cpy #GAME_AREA_HEIGHT
+    bcc bullet_exists ;branches if A < value
+    ;if we are here the bullet is deleted/offscreen
+    jmp skip
+bullet_exists:
+    lsr ;div by two to get pixel coord
+    sta aux
+    ;calculate VRAM address of top left corner
+    ldx lookup_y_high, y
+    lda lookup_y_low, y
+    clc
+    adc aux
+    bcc :+
+    inx
+    :
+    stx _VERA_ADDRx_M
+    sta _VERA_ADDRx_L
+
+    lda #$11
+    sta _VERA_DATA0
+skip:
+
+
+
+
     rts
 .endproc

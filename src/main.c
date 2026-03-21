@@ -189,7 +189,7 @@ void main() {
         ProfilerBeginBlock();
         // segment 0: clear buffer
         BitmapSwapBuffers();
-        BitmapLayerClearGameArea(bitmap_back_buffer, 11);
+        BitmapLayerClearGameArea(bitmap_back_buffer, 0);
         ProfilerEndSegment();
 
         // segment 1: music
@@ -202,20 +202,22 @@ void main() {
         if (IsActionJustPressed(ACTION_DEBUG)) {
             if (!show_debug) {
                 show_debug = 1;
-                Print4BppBitmapStr("0", 0, 134, 50);
-                Print4BppBitmapStr("1", 0, 134, 62);
-                Print4BppBitmapStr("0", 1, 134, 50);
-                Print4BppBitmapStr("1", 1, 134, 62);
+                /*
+                Print4BppBitmapStr("0", 0, 96, 50);
+                Print4BppBitmapStr("1", 0, 96, 62);
+                Print4BppBitmapStr("0", 1, 96, 50);
+                Print4BppBitmapStr("1", 1, 96, 62);
+                */
             } else {
                 show_debug = 0;
-                BitmapLayerFillRect(0, 0, 224, 48, 76, 22);
-                BitmapLayerFillRect(1, 0, 224, 48, 76, 22);
+                BitmapLayerFillRect(0, 0, 160, 224, 62, 12);
+                BitmapLayerFillRect(1, 0, 160, 224, 62, 12);
             }
         }
         if (show_debug) {
-            JoystickDrawToBitmap(0, bitmap_back_buffer, 140, 48);
-            JoystickDrawToBitmap(1, bitmap_back_buffer, 140, 60);
-            InputActionDrawToBitmap(bitmap_back_buffer, 118, 64);
+            JoystickDrawToBitmap(0, bitmap_back_buffer, 100, 224);
+            //JoystickDrawToBitmap(1, bitmap_back_buffer, 100, 210);
+            InputActionDrawToBitmap(bitmap_back_buffer, 80, 230);
         }
         ProfilerEndSegment();
 
@@ -330,15 +332,20 @@ void TestSpawnBullets() {
     _sBulletSpawnCfg cfg = { 0 };
 
     cfg.count = 12;
-    cfg.graphic_type = BULLET_GRAPHIC_DUMMY;
+    cfg.graphic_type = BULLET_GRAPHIC_PIXEL;
     cfg.color = 1;
     cfg.count_per_subblock = 0;
 
-    cfg.x_start = 100;
+    asm("jsr $FECF"); //random
+    asm("sta %v", zpa0);
+    asm("stx %v", zpa1);
+    asm("sty %v", zpa2);
+
+    cfg.x_start = zpa0 & 0x7F;
     cfg.y_start = 100;
-    cfg.angle_start = 0;
+    cfg.angle_start = zpa1;
     cfg.angle_offset = 2;
-    cfg.speed_start = 3;
+    cfg.speed_start = zpa2 & 0x07;
 
     SpawnBulletBlock(&cfg);
 }
