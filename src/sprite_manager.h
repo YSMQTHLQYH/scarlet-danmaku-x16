@@ -44,6 +44,9 @@ extern uint8_t* sprite_attr_size_palette;
 
 void SpriteManagerInit();
 
+// returns 0 on success, error code on failure
+uint8_t LoadSpritesheetFile(char* filename, uint8_t name_lenght, uint8_t sheet_number);
+
 // this will probably be called a lot so I'll make it in asm from the start
 // (low byte is sprite_n, high byte is attr_n)
 extern void fastcall SpriteManagerNotifyChanged(uint16_t attr_spr);

@@ -49,6 +49,27 @@ void SpriteManagerInit() {
     }
 }
 
+//  ---- spritesheet loading
+uint8_t LoadSpritesheetFile(char* filename, uint8_t name_lenght, uint8_t sheet_number) {
+    uint8_t target_page = FILE_LOAD_VRAM_P0;
+    _sFileLoadCtx load = { 0 };
+    _uConv16 dest_addr = { 0 };
+    if (sheet_number > 7) target_page = FILE_LOAD_VRAM_P1;
+    dest_addr.h = (sheet_number & 7) << 5;
+
+    load.filename = filename;
+    load.name_lenght = name_lenght;
+    load.dest_addr = (void*)dest_addr.w;
+    load.header_mode = FILE_LOAD_HEADERLESS;
+    load.target_mode = target_page;
+    if (LoadFile(&load)) {
+        EMU_DEBUG_1(0xFA);
+        EMU_DEBUG_1(load.error_code);
+        return load.error_code;
+    }
+    return 0;
+}
+
 //  ---- (multi)sprite objects, for things that don't need multiple instances of
 
 uint8_t CreateSpriteObject(uint8_t priority, uint8_t count, uint8_t width, uint8_t spr_size) {
@@ -238,6 +259,7 @@ void SpriteObjectSetZFlip(uint8_t obj_index, uint8_t z) {
 #undef TOP_INDEX
 #undef CONV
 }
+
 void SpriteObjectSetSizePalette(uint8_t obj_index, uint8_t size, uint8_t palette) {
 #define CONV        zpc0
 #define TOP_INDEX   zpc0.l
@@ -296,7 +318,7 @@ static uint8_t SmCheckLow(uint8_t n) {
             aux = 0;
         }
         if (aux >= n) {
-            // got them, i is at the first slot of group
+            // got them, i is at the last slot of group
             for (j = i; j > i - n; j--) {
                 sprites_used[j] = 1;
             }

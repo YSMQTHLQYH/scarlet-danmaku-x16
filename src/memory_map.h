@@ -51,8 +51,13 @@ the space stolen from side of bitmap is probably going to bleed into this part t
 the continuation of the game area's bitmap is still up for grabs
 */
 
+//  ---- test spritesheet
+#define MEM_VRAM_0_TEST_SPRITESHEET_START   0xA000
+#define MEM_VRAM_0_TEST_SPRITESHEET_END     0xBFFF
+#define TEST_SPRITESHEET_NUMBER             5
+
 //  ---- Unused 2
-#define MEM_VRAM_0_UNUSED_2_START   0xA000
+#define MEM_VRAM_0_UNUSED_2_START   0xC000
 #define MEM_VRAM_0_UNUSED_2_END     0xCFFF
 
 

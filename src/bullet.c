@@ -18,19 +18,22 @@ array order is x_low, x_high, y_low, y_high
 1KB in total per speed, 8 speeds per ram bank
 */
 
-void SpawnBulletBlock(_sBulletSpawnCfg* cfg) {
+uint8_t SpawnBulletBlock(_sBulletSpawnCfg* cfg) {
 #define ANGLE   zpa6
 #define SPEED   zpa5
+#define X       zpc3.l
+#define Y       zpc3.h
 #define TABLE_PTR   zptr3
-    register uint8_t i;
+    register uint8_t i, subblock_i = 0;
     uint8_t index;
+    uint8_t sub_angle, sub_speed, sub_x, sub_y;
 
     // find empty block
     for (index = 0; index < BULLET_BLOCK_COUNT; index++) {
         if (bullet_block[index].remaining_bullets == 0) goto found_block;
     }
     // no empty bullet block
-    return;
+    return 0xFF;
 
 found_block:
     bullet_block[index].remaining_bullets = cfg->count;
@@ -46,6 +49,16 @@ found_block:
 
     ANGLE = cfg->angle_start;
     SPEED = cfg->speed_start;
+    X = cfg->x_start;
+    Y = cfg->y_start;
+    if (cfg->count_per_subblock != 0) {
+        sub_angle = ANGLE;
+        sub_speed = SPEED;
+        sub_x = X;
+        sub_y = Y;
+        subblock_i = cfg->count_per_subblock;
+    }
+
     for (i = 0; i < BULLETS_PER_BLOCK; i++) {
         if (i >= cfg->count) {
             // not actually a bullet, fill it with zeros
@@ -79,7 +92,7 @@ found_block:
 
             VERA_DATA0 = 0; //py_l
             VERA_DATA0 = *TABLE_PTR; //vy_l
-            VERA_DATA0 = cfg->y_start; //py_h
+            VERA_DATA0 = Y; //py_h
             // oh come on VScode, what even is the "error" now?
             TABLE_PTR |= 0x0300; // modifying pointer directly, setting bits of high byte to 0b11
             VERA_DATA0 = *TABLE_PTR; //vy_h
@@ -87,19 +100,39 @@ found_block:
             VERA_DATA0 = 0; //px_l
             TABLE_PTR &= 0xFCFF; // clearing bottom two bits of high byte
             VERA_DATA0 = *TABLE_PTR; //vx_l
-            VERA_DATA0 = cfg->x_start; //px_h
+            VERA_DATA0 = X; //px_h
             TABLE_PTR |= 0x0100;
             VERA_DATA0 = *TABLE_PTR; //vx_h
 
 
             // set up next
-            ANGLE += cfg->angle_offset;
-            SPEED += cfg->speed_offset;
+            if (--subblock_i == 0) { //note that subblock_i is initialized to 0, if we aren't doing subblocks this will evaluate to 0xFF 
+                sub_angle += cfg->angle_offset_subblock;
+                ANGLE = sub_angle;
+                sub_speed += cfg->speed_offset_subblock;
+                SPEED = sub_speed;
+                sub_x += cfg->x_offset_subblock;
+                X = sub_x;
+                sub_y += cfg->y_offset_subblock;
+                Y = sub_y;
+                subblock_i = cfg->count_per_subblock;
+            } else {
+                // no subblock change
+                ANGLE += cfg->angle_offset;
+                SPEED += cfg->speed_offset;
+                X += cfg->x_offset;
+                Y += cfg->y_offset;
+            }
+
         }
     }
 #undef TABLE_PTR
+#undef Y
+#undef X
 #undef SPEED
 #undef ANGLE
+
+    return index;
 }
 
 

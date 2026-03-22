@@ -24,7 +24,7 @@ typedef struct {
     uint8_t count;
     uint8_t graphic_type; //_eBulletGraphicType
     uint8_t color;
-    uint8_t count_per_subblock;
+    uint8_t count_per_subblock; // set this to 0 to have only a single subblock
 
     uint8_t x_start;
     int8_t x_offset;
@@ -43,8 +43,9 @@ typedef struct {
 
 uint8_t BulletManagerInit();
 
-// uses zptr3, zpa5 and zpa6!
-void SpawnBulletBlock(_sBulletSpawnCfg* cfg);
+// uses zptr3, zpc3, zpa5 and zpa6!
+// returns index of bullet block used (0-47), or 0xFF if there wasn't any free
+uint8_t SpawnBulletBlock(_sBulletSpawnCfg* cfg);
 
 void BulletTick();
 

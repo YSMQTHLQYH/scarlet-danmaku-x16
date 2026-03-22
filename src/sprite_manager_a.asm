@@ -80,7 +80,6 @@ sprite_attr_highest_changed: .res 8, $00
     ; we do have something to write if 
     ; _sprite_attr_lowest_changed <= _sprite_attr_highest_changed
     lda _sprite_attr_highest_changed, y
-    ;sta $9fb9
     cmp _sprite_attr_lowest_changed, y; C = 1 if A >= v, C = 0 if A < v
     bcc @skip ;branc if _sprite_attr_highest_changed < _sprite_attr_lowest_changed
     ; we DO have something to write
@@ -89,15 +88,21 @@ sprite_attr_highest_changed: .res 8, $00
     ;sta $9fba
     pha ;index starts at lowest (same as highest, pull from stack fist)
     ; VRAM addr, low byte is lowest_n (already in A) * 8 (<<3)
+    ; the logic of high byte here was fucked, only two bits get shifted into high byte
     ldx #VERA_SPRITE_ATTR_M
-    asl a
+    asl
+    ;IDIOT LMAO THIS BIT STARTS ALLWAYS AT ZERO THIS IS LIKE A COMMENT ON A COMMENT ON A COMMENT BY NOW
+    ;WHY DID I SIGNUP TO MAKE AN 8BIT GAME, I SIGNED UP TO DEBUGGING THIS SORT OF SHIT
+    ;bcc :+
+    ;inx ; top bit gets shifter TWICE you dummy, not just added....
+    ;:
+    asl 
     bcc :+
     inx
-    :asl a
-    bcc :+
-    inx
-    :asl a
-    bcc :+
+    inx ; THIS is the bit that gets shifted twice
+    :asl
+    ;~~dummas this bit stays in low byte~~ NO YOU IDIOT ITS BIT 7 AAAAAAAAA
+    bcc :+ 
     inx
     :stx _VERA_ADDRx_M
     ; offset for attr_n (0-7, value still in Y, but no opcode for A+Y...)

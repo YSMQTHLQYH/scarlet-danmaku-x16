@@ -11,6 +11,7 @@
 #include "bullet.h"
 #include "player.h"
 
+#include "sfx_player.h"
 #include "zsm_player.h"
 #include "text.h"
 
@@ -22,68 +23,6 @@
 _sPlayer player = { 0 };
 
 void TestSpawnBullets();
-void test_sprite() {
-    static uint16_t x = 100, y = 200;
-    static uint8_t b = 0, frame = 0, p_obj = 0;
-    uint8_t j, c;
-    uint16_t i;
-    _uConv16 addr;
-    _sFileLoadCtx pl = { 0 };
-    x16_ram_bank = MEM_BANK_SPRITE_TABLE;
-    // fill sprite graphics
-    addr.w = MEM_VRAM_0_UNUSED_2_START;
-    VERA_CTRL = 0;
-    VERA_ADDRx_H = 0x10;
-    VERA_ADDRx_M = addr.h;
-    VERA_ADDRx_L = addr.l;
-
-    if (b == 0) {
-        b = 1;
-        for (j = 0; j < 16; j++) {
-            for (i = 0; i < 256; i++) {
-                c = (uint8_t)i;
-                VERA_DATA0 = c;
-            }
-        }
-
-        pl.filename = "test assets/programmerart.bin";
-        pl.name_lenght = 12 + 17;
-        pl.dest_addr = (void*)(MEM_VRAM_0_UNUSED_2_START + 4096);
-        pl.header_mode = FILE_LOAD_HEADERLESS;
-        pl.target_mode = FILE_LOAD_VRAM_P0;
-        if (LoadFile(&pl)) {
-            EMU_DEBUG_1(0xFA);
-            EMU_DEBUG_1(pl.error_code);
-        }
-
-
-
-    }
-
-
-    // set up hardware sprite
-    addr.w = MEM_VRAM_1_VERA_SPRITE_ATTR_START;
-    VERA_ADDRx_H = 0x11;
-    VERA_ADDRx_M = addr.h;
-    VERA_ADDRx_L = addr.l;
-
-    // sprite programmerart
-    addr.w = (MEM_VRAM_0_UNUSED_2_START + 4096);
-    addr.w += ((frame++ >> 3) << 8);
-    addr.w >>= 5;
-    VERA_DATA0 = addr.l; // addr 12-5
-    VERA_DATA0 = addr.h | 0x80; // addr 16-13
-    VERA_DATA0 = 0xC4;//x
-    VERA_DATA0 = 0;
-    VERA_DATA0 = 0x100;//y
-    VERA_DATA0 = 0;
-    VERA_DATA0 = 0x0C;//z, flip
-    VERA_DATA0 = 0x50;//size, palete
-
-    return;
-
-
-}
 
 static void Init();
 static void PrintProfilerBitmapFrame(uint8_t buffer_n);
@@ -179,6 +118,7 @@ void main() {
 
         // segment 1: music
         ZsmTick();
+        SfxTick();
         ProfilerEndSegment();
 
         // segment 2: input
@@ -207,7 +147,6 @@ void main() {
         ProfilerEndSegment();
 
         // segment 3: placeholder dummy
-        test_sprite();
         SpriteManagerWriteChanges();
         ProfilerEndSegment();
 
@@ -221,7 +160,6 @@ void main() {
         if (IsActionJustPressed(ACTION_START)) {
             TestSpawnBullets();
         }
-
         ProfilerEndSegment();
 
         // segment 6: ~~math~~ graphics test
@@ -289,6 +227,13 @@ static void Init() {
 
     //  ---- sprites
     SpriteManagerInit();
+    s = LoadSpritesheetFile("test assets/programmerart.bin", 12 + 17, TEST_SPRITESHEET_NUMBER);
+    if (s == 0) {
+        printf("Loaded test spritesheet\n");
+    } else {
+        printf("Failed to load spritesheet\n");
+    }
+
 
     //  ---- graphics
     VERA_CTRL = 0x00;
@@ -316,7 +261,7 @@ void TestSpawnBullets() {
 
     cfg.count = 32;
     cfg.graphic_type = BULLET_GRAPHIC_PIXEL;
-    cfg.count_per_subblock = 0;
+    cfg.count_per_subblock = 8;
 
     asm("jsr $FECF"); //random
     asm("sta %v", zpa0);
@@ -324,10 +269,16 @@ void TestSpawnBullets() {
     asm("sty %v", zpa2);
 
     cfg.x_start = (zpa0 & 0x3F) + 64;
+    cfg.x_offset = 0;
+    cfg.x_offset_subblock = 10;
     cfg.y_start = (zpa2 & 0x0F) + 90;
+    cfg.y_offset = 0;
+    cfg.x_offset_subblock = 5;
     cfg.angle_start = zpa1;
     cfg.angle_offset = 3;
-    cfg.speed_start = zpa2 & 0x07;
+    cfg.angle_offset_subblock = 32;
+    cfg.speed_start = zpa2 & 0x03;
+    cfg.speed_offset_subblock = 1;
 
     zpa2 &= 0x0F;
     zpa2 |= (zpa2 << 4);

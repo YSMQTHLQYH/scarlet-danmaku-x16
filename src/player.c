@@ -5,6 +5,9 @@
 #include "bitmap_layer.h"
 #include "graphics_utils.h"
 #include "sprite_manager.h"
+#include "sfx_player.h"
+
+#include "player_shot.h"
 
 //TODO: set up a proper global selection for this
 const uint8_t selected_joystick = 0;
@@ -54,7 +57,7 @@ uint8_t PlayerInit(_sPlayer* p) {
     addr.w = MEM_VRAM_1_KERNAL_CHARSET_START >> 5;
     addr.h |= 0x08; // addr bit 16
     SpriteObjectSetAddr(p->spr_obj, addr.h, &addr.l);
-    SpriteObjectSetZFlip(p->spr_obj, 0x0C);
+    SpriteObjectSetZFlip(p->spr_obj, 0x08);
     SpriteObjectSetSizePalette(p->spr_obj, 0b1010, 15);
 
     SetColorPalette(15, color_palette);
@@ -228,10 +231,17 @@ void PlayerTick(_sPlayer* p) {
     pixel_read = VERA_DATA0;
     if ((pixel_read &= mask) != 0) {
         // HIT
+        SfxPlay(0x20);
         EMU_DEBUG_1(pixel_read);
     }
 #undef ADDR
 
 #undef PX
 #undef PY
+
+
+    //    ----- shooting
+    if (IsActionJustPressed(ACTION_SHOOT)) {
+        shoot(p);
+    }
 }
